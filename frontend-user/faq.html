@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客服中心 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" class="active" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="chat-page-wrap">
+    <div class="chat-container">
+        <div style="display:flex;justify-content:flex-end;padding:8px 12px;border-bottom:1px solid #f0f0f0;background:#fafafa;border-radius:12px 12px 0 0">
+            <button id="modeToggle" class="btn btn-outline btn-sm" style="border-radius:20px" onclick="toggleMode()">
+                <i class="fas fa-headset"></i> <span id="modeLabel">转人工客服</span>
+            </button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="输入您的问题..." onkeyup="if(event.key==='Enter')sendMessage()">
+            <button class="btn btn-primary" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div></div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+const chatEl = document.getElementById('chatMessages');
+let isHumanMode = false;
+let pollTimer = null;
+
+function toggleMode() {
+    if (!isHumanMode) {
+        if (!getUser()) { showToast('请先登录后才能使用人工客服', 'error'); return; }
+        isHumanMode = true;
+        document.getElementById('modeLabel').textContent = '返回智能客服';
+        document.getElementById('modeToggle').style.background = '#C41A1A';
+        document.getElementById('modeToggle').style.color = '#fff';
+        document.getElementById('chatInput').placeholder = '输入消息给人工客服...';
+        chatEl.innerHTML = '';
+        addBotMsg('<i class="fas fa-headset"></i> 已转接人工客服，请输入您的问题，管理员会尽快回复。');
+        loadChatHistory();
+        startPoll();
+    } else {
+        isHumanMode = false;
+        document.getElementById('modeLabel').textContent = '转人工客服';
+        document.getElementById('modeToggle').style.background = '';
+        document.getElementById('modeToggle').style.color = '';
+        document.getElementById('chatInput').placeholder = '输入您的问题...';
+        chatEl.innerHTML = '';
+        stopPoll();
+        loadFAQs();
+    }
+}
+
+async function loadChatHistory() {
+    const data = await api('/api/chat/history');
+    if (!data) return;
+    data.forEach(m => {
+        if (m.sender === 'USER') addUserMsg(m.content);
+        else addAdminMsg(m.content);
+    });
+}
+
+function addAdminMsg(text) {
+    chatEl.innerHTML += '<div class="chat-msg bot"><div class="chat-icon" style="background:#52c41a"><i class="fas fa-headset"></i></div><div class="chat-bubble" style="background:#f6ffed;border:1px solid #b7eb8f">' + text + '</div></div>';
+    chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function startPoll() {
+    stopPoll();
+    pollTimer = setInterval(async () => {
+        const data = await api('/api/chat/history');
+        if (!data) return;
+        chatEl.innerHTML = '';
+        addBotMsg('<i class="fas fa-headset"></i> 人工客服模式');
+        data.forEach(m => {
+            if (m.sender === 'USER') addUserMsg(m.content);
+            else addAdminMsg(m.content);
+        });
+    }, 5000);
+}
+function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+function addBotMsg(text) {
+    chatEl.innerHTML += '<div class="chat-msg bot">' +
+        '<div class="chat-icon"><i class="fas fa-robot"></i></div>' +
+        '<div class="chat-bubble">' + text + '</div>' +
+    '</div>';
+    chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function addUserMsg(text) {
+    chatEl.innerHTML += '<div class="chat-msg user">' +
+        '<div class="chat-icon"><i class="fas fa-user"></i></div>' +
+        '<div class="chat-bubble">' + text + '</div>' +
+    '</div>';
+    chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function addQuickQuestions(faqs) {
+    let html = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">';
+    faqs.forEach(f => {
+        const q = f.question || f.title || f;
+        html += '<button class="btn btn-outline btn-sm" style="border-radius:20px" onclick="askQuestion(\'' + q.replace(/'/g, "\\'") + '\')">' + q + '</button>';
+    });
+    html += '</div>';
+    chatEl.innerHTML += '<div class="chat-msg bot">' +
+        '<div class="chat-icon"><i class="fas fa-robot"></i></div>' +
+        '<div class="chat-bubble">您可以点击下方常见问题快速提问：' + html + '</div>' +
+    '</div>';
+    chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+async function loadFAQs() {
+    addBotMsg('您好！欢迎来到贵州红色旅游客服中心 🎉<br>我是智能客服小红，有什么可以帮您的？');
+    const data = await api('/api/faq/list');
+    if (data && data.length) {
+        addQuickQuestions(data);
+    }
+}
+
+function askQuestion(q) {
+    document.getElementById('chatInput').value = '';
+    addUserMsg(q);
+    doAsk(q);
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    if (isHumanMode) {
+        if (!getUser()) { showToast('请先登录', 'error'); return; }
+        addUserMsg(q);
+        await api('/api/chat/send?content=' + encodeURIComponent(q));
+    } else {
+        addUserMsg(q);
+        await doAsk(q);
+    }
+}
+
+async function doAsk(question) {
+    const typingId = 'typing_' + Date.now();
+    chatEl.innerHTML += '<div class="chat-msg bot" id="' + typingId + '">' +
+        '<div class="chat-icon"><i class="fas fa-robot"></i></div>' +
+        '<div class="chat-bubble"><i class="fas fa-spinner fa-spin"></i> 正在思考...</div>' +
+    '</div>';
+    chatEl.scrollTop = chatEl.scrollHeight;
+
+    const data = await api('/api/faq/ask?question=' + encodeURIComponent(question));
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    if (data) {
+        addBotMsg(data.answer || data.content || data);
+    } else {
+        addBotMsg('抱歉，我暂时无法回答这个问题，您可以换个方式提问或联系人工客服。');
+    }
+}
+
+loadFAQs();
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景点列表 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots" class="active">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="section">
+    <div class="container">
+        <div class="filter-bar">
+            <select id="filterRegion"><option value="">全部地区</option></select>
+            <select id="filterTheme"><option value="">全部主题</option></select>
+            <select id="filterOrder">
+                <option value="">默认排序</option>
+                <option value="viewCount">按热度</option>
+                <option value="avgRating">按评分</option>
+                <option value="ticketPrice">按价格</option>
+            </select>
+            <div class="search-box">
+                <input type="text" id="filterKeyword" placeholder="搜索景点名称..." data-i18n-placeholder="search">
+                <button class="btn btn-primary" onclick="loadSpots(1)"><i class="fas fa-search"></i> 搜索</button>
+            </div>
+        </div>
+
+        <div id="spotGrid" class="card-grid">
+            <div class="loading"><div class="spinner"></div><p>加载中...</p></div>
+        </div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+let currentPage = 1;
+
+async function initFilters() {
+    const [regions, themes] = await Promise.all([
+        api('/api/spot/regions'),
+        api('/api/spot/themes')
+    ]);
+    const regionSel = document.getElementById('filterRegion');
+    const themeSel = document.getElementById('filterTheme');
+    if (regions) regions.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r; o.textContent = r;
+        regionSel.appendChild(o);
+    });
+    if (themes) themes.forEach(th => {
+        const o = document.createElement('option');
+        o.value = th; o.textContent = th;
+        themeSel.appendChild(o);
+    });
+}
+
+async function loadSpots(page) {
+    currentPage = page;
+    const region = document.getElementById('filterRegion').value;
+    const theme = document.getElementById('filterTheme').value;
+    const keyword = document.getElementById('filterKeyword').value;
+    const orderBy = document.getElementById('filterOrder').value;
+
+    const grid = document.getElementById('spotGrid');
+    grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+
+    const res = await api(`/api/spot/list?page=${page}&size=9&region=${encodeURIComponent(region)}&theme=${encodeURIComponent(theme)}&keyword=${encodeURIComponent(keyword)}&orderBy=${encodeURIComponent(orderBy)}`);
+    if (!res) { grid.innerHTML = '<div class="empty"><i class="fas fa-map-marker-alt"></i><p>加载失败，请重试</p></div>'; return; }
+
+    const list = res.records || res.list || res;
+    const total = res.total || (Array.isArray(res) ? res.length : 0);
+
+    if (!list || list.length === 0) {
+        grid.innerHTML = '<div class="empty"><i class="fas fa-map-marker-alt"></i><p>暂无景点数据</p></div>';
+        document.getElementById('pagination').innerHTML = '';
+        return;
+    }
+
+    grid.innerHTML = list.map(s => `
+        <div class="card" onclick="location.href='spot-detail.html?id=${s.id}'">
+            <div class="card-img">
+                ${s.coverImage ? `<img src="${API + s.coverImage}" alt="${s.name}" onerror="imgError(this)">` : ''}
+                <div class="placeholder-icon"><i class="fas fa-mountain"></i></div>
+                ${s.theme ? `<span class="card-tag">${s.theme}</span>` : ''}
+            </div>
+            <div class="card-body">
+                <h3>${s.name || ''}</h3>
+                <p>${s.description || ''}</p>
+                <div class="card-meta">
+                    <span class="card-price">${s.ticketPrice > 0 ? '¥' + s.ticketPrice : '免费'}</span>
+                    <span><i class="fas fa-eye"></i> ${s.viewCount || 0}</span>
+                </div>
+                <div class="card-rating" style="margin-top:6px">${renderStars(Math.round(s.avgRating || 0))}</div>
+            </div>
+        </div>
+    `).join('');
+
+    renderPagination(document.getElementById('pagination'), currentPage, total, 9, 'loadSpots');
+}
+
+document.getElementById('filterKeyword').addEventListener('keyup', e => { if (e.key === 'Enter') loadSpots(1); });
+
+initFilters();
+loadSpots(1);
+</script>
+</body>
+</html>

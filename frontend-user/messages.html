@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息通知 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="profile-layout">
+        <div class="profile-sidebar">
+            <div class="profile-sidebar-header">
+                <div class="profile-avatar" id="sidebarAvatar"></div>
+                <h3 id="sidebarName"></h3>
+                <p id="sidebarPhone"></p>
+            </div>
+            <div class="profile-menu">
+                <a href="profile.html"><i class="fas fa-user"></i><span>个人中心</span></a>
+                <a href="favorites.html"><i class="fas fa-heart"></i><span>我的收藏</span></a>
+                <a href="orders.html"><i class="fas fa-shopping-bag"></i><span>我的订单</span></a>
+                <a href="messages.html"><i class="fas fa-bell"></i><span>消息通知</span></a>
+                <a href="my-routes.html"><i class="fas fa-route"></i><span>我的线路</span></a>
+                <a href="feedback.html"><i class="fas fa-bullhorn"></i><span>问题反馈</span></a>
+            </div>
+        </div>
+        <div class="profile-content">
+            <div class="profile-section-header">
+                <span class="profile-section-header-title"><i class="fas fa-bell"></i>消息通知</span>
+                <button class="btn btn-outline btn-sm" onclick="markAllRead()"><i class="fas fa-check-double"></i> 全部已读</button>
+            </div>
+            <div id="messageList"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+if (!requireLogin()) throw new Error('need login');
+
+let currentPage = 1, totalRecords = 0;
+
+function renderSidebar() {
+    const u = getUser();
+    const initial = (u.nickname || u.username || '?').charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initial;
+    if (u.avatar) {
+        document.getElementById('sidebarAvatar').innerHTML = '<img src="' + API + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent=\'' + initial + '\'">';
+    }
+    document.getElementById('sidebarName').textContent = u.nickname || u.username || '';
+    document.getElementById('sidebarPhone').textContent = u.phone || '';
+}
+
+function emptyMsg() {
+    return '<div class="empty-illus">' +
+        '<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect width="80" height="80" rx="40" fill="#FFF0F0"/>' +
+        '<path d="M20 28a4 4 0 0 1 4-4h32a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4V28z" fill="#C41A1A" fill-opacity=".12"/>' +
+        '<path d="M20 28l20 16 20-16" stroke="#C41A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
+        '<line x1="20" y1="28" x2="20" y2="56" stroke="#C41A1A" stroke-width="2" stroke-opacity=".3"/>' +
+        '<line x1="60" y1="28" x2="60" y2="56" stroke="#C41A1A" stroke-width="2" stroke-opacity=".3"/>' +
+        '<line x1="20" y1="56" x2="60" y2="56" stroke="#C41A1A" stroke-width="2" stroke-opacity=".3"/>' +
+        '</svg>' +
+        '<p>暂无消息通知</p><span>系统消息和活动通知将显示在这里</span>' +
+    '</div>';
+}
+
+async function loadMessages(page) {
+    currentPage = page;
+    const data = await api('/api/message/list?page=' + page + '&size=10');
+    const el = document.getElementById('messageList');
+    if (!data || data === true) { el.innerHTML = emptyMsg(); return; }
+    const list = data.records || data.list || (Array.isArray(data) ? data : []);
+    totalRecords = data.total || list.length;
+    if (!list.length) { el.innerHTML = emptyMsg(); document.getElementById('pagination').innerHTML = ''; return; }
+    el.innerHTML = list.map(m => {
+        const unread = !m.isRead && !m.read;
+        const stateClass = unread ? 'unread' : 'read';
+        return '<div class="msg-item ' + stateClass + '" onclick="markRead(\'' + m.id + '\')">' +
+            '<div class="msg-item-header">' +
+                '<div class="msg-item-title">' +
+                    (unread ? '<span class="dot"></span>' : '') +
+                    '<span>' + (m.title || '系统通知') + '</span>' +
+                '</div>' +
+                '<span class="msg-item-time"><i class="fas fa-clock" style="margin-right:4px;font-size:11px"></i>' + formatDate(m.createTime || m.createdAt) + '</span>' +
+            '</div>' +
+            '<div class="msg-item-content">' + (m.content || '') + '</div>' +
+        '</div>';
+    }).join('');
+    renderPagination(document.getElementById('pagination'), currentPage, totalRecords, 10, 'loadMessages');
+}
+
+async function markRead(id) {
+    await api('/api/message/read?id=' + id);
+    loadMessages(currentPage);
+}
+
+async function markAllRead() {
+    const data = await api('/api/message/readAll');
+    if (data !== null) {
+        showToast('已全部标为已读');
+        loadMessages(currentPage);
+    }
+}
+
+renderSidebar();
+loadMessages(1);
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美食详情 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>.pay-opt:has(input:checked){border-color:var(--red) !important;background:#fff5f5}</style>
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" class="active" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="detail-header">
+    <div class="container">
+        <h1 id="foodName">加载中...</h1>
+        <div class="meta">
+            <span id="foodCategory" class="meta-item theme-badge"><i class="fas fa-tag"></i></span>
+            <span id="foodPrice" class="meta-item" style="font-weight:700;font-size:15px"></span>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="detail-content">
+        <div class="detail-main">
+            <h3 style="margin-bottom:16px">美食介绍</h3>
+            <div class="culture-text" id="foodDesc">
+                <div class="loading"><div class="spinner"></div><p>加载中...</p></div>
+            </div>
+
+            <div id="storeSection" style="display:none;margin-top:32px">
+                <h3 style="margin-bottom:16px">推荐门店</h3>
+                <div style="background:#fafafa;border-radius:var(--r);padding:20px;border:1px solid var(--border)">
+                    <div style="display:flex;gap:16px;align-items:flex-start">
+                        <img id="storeCover" style="width:120px;height:90px;border-radius:8px;object-fit:cover;flex-shrink:0" alt="">
+                        <div style="flex:1">
+                            <h4 id="storeName" style="margin:0 0 8px 0"></h4>
+                            <table class="info-table" id="storeInfo" style="margin:0"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
+                <h3 style="margin-bottom:16px">数量选择</h3>
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                    <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--r)">
+                        <button onclick="changeQty(-1)" style="width:36px;height:36px;border:none;background:none;cursor:pointer;font-size:18px">−</button>
+                        <input type="number" id="qty" value="1" min="1" max="99" style="width:50px;text-align:center;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);height:36px;font-size:16px">
+                        <button onclick="changeQty(1)" style="width:36px;height:36px;border:none;background:none;cursor:pointer;font-size:18px">+</button>
+                    </div>
+                    <div style="font-size:20px;color:var(--red);font-weight:700">
+                        小计：<span id="subtotal">¥0</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="buyFood()" style="font-size:16px;padding:12px 32px"><i class="fas fa-shopping-cart"></i> 立即购买</button>
+            </div>
+        </div>
+        <div class="detail-sidebar">
+            <div class="sidebar-card">
+                <h3>美食图片</h3>
+                <img id="foodCover" style="width:100%;border-radius:6px" alt="">
+            </div>
+            <div class="sidebar-card" id="relatedSection" style="display:none">
+                <h3>同类推荐</h3>
+                <div id="relatedList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="payModal">
+    <div class="modal" style="position:relative">
+        <span class="modal-close" onclick="closePayModal()">&times;</span>
+        <h3 style="margin-bottom:16px">确认支付</h3>
+        <div style="text-align:center;margin:20px 0">
+            <div style="font-size:32px;color:var(--red);font-weight:700" id="payAmount">¥0</div>
+            <div style="color:var(--text2);margin-top:4px">订单金额</div>
+        </div>
+        <div style="margin:24px 0">
+            <div style="display:flex;gap:12px;margin-bottom:12px">
+                <label class="pay-opt" style="flex:1;display:flex;align-items:center;gap:8px;padding:14px;border:2px solid var(--red);border-radius:var(--r);cursor:pointer;background:#fff5f5" onclick="selectPayMethod('WECHAT')">
+                    <input type="radio" name="payMethod" value="WECHAT" checked>
+                    <i class="fab fa-weixin" style="font-size:22px;color:#07c160"></i> 微信支付
+                </label>
+            </div>
+            <p style="font-size:13px;color:var(--text2);margin-bottom:8px">银行卡支付：</p>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_ICBC')">
+                    <input type="radio" name="payMethod" value="BANK_ICBC">
+                    <i class="fas fa-university" style="color:#C41A1A"></i> 工商银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_CCB')">
+                    <input type="radio" name="payMethod" value="BANK_CCB">
+                    <i class="fas fa-university" style="color:#003DA5"></i> 建设银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_ABC')">
+                    <input type="radio" name="payMethod" value="BANK_ABC">
+                    <i class="fas fa-university" style="color:#009944"></i> 农业银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_BOC')">
+                    <input type="radio" name="payMethod" value="BANK_BOC">
+                    <i class="fas fa-university" style="color:#C41A1A"></i> 中国银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_BOCOM')">
+                    <input type="radio" name="payMethod" value="BANK_BOCOM">
+                    <i class="fas fa-university" style="color:#003976"></i> 交通银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_CMB')">
+                    <input type="radio" name="payMethod" value="BANK_CMB">
+                    <i class="fas fa-university" style="color:#E60012"></i> 招商银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_PSBC')">
+                    <input type="radio" name="payMethod" value="BANK_PSBC">
+                    <i class="fas fa-university" style="color:#007236"></i> 邮储银行
+                </label>
+            </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="confirmPay()">确认支付（模拟）</button>
+        <div style="text-align:center;margin-top:12px"><a href="orders.html" style="color:var(--text2);font-size:13px">稍后支付 →</a></div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+const foodId = getParam('id');
+let food = null, lastOrderId = null, payMethod = 'WECHAT';
+
+if (!foodId) { location.href = 'foods.html'; }
+
+function changeQty(delta) {
+    var el = document.getElementById('qty');
+    var v = Math.max(1, Math.min(99, (parseInt(el.value) || 1) + delta));
+    el.value = v;
+    updateSubtotal();
+}
+
+function updateSubtotal() {
+    var qty = parseInt(document.getElementById('qty').value) || 1;
+    var price = food ? food.price : 0;
+    document.getElementById('subtotal').textContent = '¥' + (price * qty).toFixed(2);
+}
+
+async function loadDetail() {
+    food = await api('/api/food/detail?id=' + foodId);
+    if (!food) { document.getElementById('foodDesc').innerHTML = '<p>美食不存在</p>'; return; }
+    document.getElementById('foodName').textContent = food.name || '';
+    document.getElementById('foodCategory').innerHTML = '<i class="fas fa-tag"></i> ' + (food.category || '');
+    document.getElementById('foodPrice').innerHTML = '¥' + (food.price || 0);
+    var coverEl = document.getElementById('foodCover');
+    if (coverEl) {
+        coverEl.onerror = function(){ imgError(coverEl); };
+        coverEl.src = food.coverImage ? (API + food.coverImage) : '';
+    }
+    document.getElementById('foodDesc').innerHTML = '<p style="font-size:15px;line-height:1.8;color:var(--text)">' + (food.description || '暂无介绍') + '</p>';
+    document.title = (food.name || '美食详情') + ' - 贵州红色旅游';
+    updateSubtotal();
+    if (food.storeId) loadStore(food.storeId);
+    if (food.category) loadRelated(food.category);
+}
+
+async function loadStore(storeId) {
+    var store = await api('/api/food/storeDetail?id=' + storeId);
+    if (!store) return;
+    document.getElementById('storeSection').style.display = 'block';
+    document.getElementById('storeName').textContent = store.name || '';
+    var storeEl = document.getElementById('storeCover');
+    if (storeEl) {
+        storeEl.onerror = function(){ imgError(storeEl); };
+        storeEl.src = store.coverImage ? (API + store.coverImage) : '';
+    }
+    document.getElementById('storeInfo').innerHTML =
+        '<tr><td>地址</td><td><i class="fas fa-map-marker-alt" style="color:var(--red)"></i> ' + (store.location || '-') + '</td></tr>' +
+        '<tr><td>电话</td><td><i class="fas fa-phone" style="color:var(--red)"></i> ' + (store.phone || '-') + '</td></tr>' +
+        '<tr><td>分类</td><td>' + (store.category || '-') + '</td></tr>' +
+        '<tr><td>卫生等级</td><td><span style="background:#07c160;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">' + (store.hygieneLevel || '-') + '</span></td></tr>';
+}
+
+async function loadRelated(category) {
+    var data = await api('/api/food/list?page=1&size=6&category=' + encodeURIComponent(category));
+    if (!data) return;
+    var list = (data.records || data.list || data).filter(function(f){ return f.id != foodId; }).slice(0, 4);
+    if (!list.length) return;
+    document.getElementById('relatedSection').style.display = 'block';
+    document.getElementById('relatedList').innerHTML = list.map(function(f) {
+        return '<a href="food-detail.html?id=' + f.id + '" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5;align-items:center;color:var(--text)">' +
+            '<div style="width:50px;height:50px;border-radius:6px;overflow:hidden;flex-shrink:0">' +
+                (f.coverImage ? '<img src="' + API + f.coverImage + '" style="width:100%;height:100%;object-fit:cover" onerror="imgError(this)">' : '') +
+            '</div>' +
+            '<div style="flex:1;min-width:0">' +
+                '<div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (f.name || '') + '</div>' +
+                '<div style="font-size:12px;color:var(--red);margin-top:4px;font-weight:600">¥' + (f.price || 0) + '</div>' +
+            '</div>' +
+        '</a>';
+    }).join('');
+}
+
+async function buyFood() {
+    if (!getUser()) { showToast('请先登录', 'error'); setTimeout(function(){ location.href = 'login.html'; }, 1000); return; }
+    var qty = parseInt(document.getElementById('qty').value) || 1;
+    var amount = (food.price || 0) * qty;
+    var data = await api('/api/order/create?orderType=FOOD&targetId=' + foodId + '&targetName=' + encodeURIComponent(food.name) + '&amount=' + amount + '&quantity=' + qty);
+    if (data !== null) {
+        lastOrderId = data.id || data;
+        document.getElementById('payAmount').textContent = '¥' + amount.toFixed(2);
+        document.getElementById('payModal').classList.add('show');
+    }
+}
+
+function selectPayMethod(m) { payMethod = m; document.querySelectorAll('.pay-opt').forEach(l => { var c = l.querySelector('input').value === m; l.style.borderColor = c ? 'var(--red)' : 'var(--border)'; l.style.background = c ? '#fff5f5' : ''; }); }
+function closePayModal() { document.getElementById('payModal').classList.remove('show'); }
+
+async function confirmPay() {
+    if (!lastOrderId) return;
+    var data = await api('/api/order/pay?orderId=' + lastOrderId + '&payMethod=' + payMethod);
+    if (data !== null) {
+        lastOrderId = null;
+        closePayModal();
+        showToast('支付成功！');
+        setTimeout(function(){ location.href = 'orders.html'; }, 1200);
+    }
+}
+
+document.getElementById('qty').addEventListener('input', updateSubtotal);
+loadDetail();
+</script>
+</body>
+</html>

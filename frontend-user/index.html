@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span data-i18n="home">贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" class="active" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="hero">
+    <div class="carousel-track" id="carouselTrack"></div>
+    <button class="carousel-btn carousel-prev" onclick="carouselPrev()"><i class="fas fa-chevron-left"></i></button>
+    <button class="carousel-btn carousel-next" onclick="carouselNext()"><i class="fas fa-chevron-right"></i></button>
+    <div class="carousel-dots" id="carouselDots"></div>
+</div>
+
+<div class="container">
+    <div class="section">
+        <div class="section-title">
+            <span data-i18n="hotSpots">热门景点</span>
+            <a href="spots.html" class="section-more" data-i18n="more">查看更多 →</a>
+        </div>
+        <div class="card-grid" id="hotSpots"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">
+            <span data-i18n="recommendRoutes">推荐线路</span>
+            <a href="routes.html" class="section-more" data-i18n="more">查看更多 →</a>
+        </div>
+        <div class="card-grid" id="recRoutes"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">
+            <span data-i18n="cultureStories">红色文化</span>
+            <a href="culture.html" class="section-more" data-i18n="more">查看更多 →</a>
+        </div>
+        <div class="card-grid" id="cultureList"></div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+let carouselIdx = 0, carouselTotal = 0, carouselTimer = null;
+
+function carouselGo(i) {
+    carouselIdx = (i + carouselTotal) % carouselTotal;
+    document.getElementById('carouselTrack').style.transform = 'translateX(-' + (carouselIdx * 100) + '%)';
+    document.querySelectorAll('#carouselDots span').forEach((d, idx) => d.classList.toggle('active', idx === carouselIdx));
+    resetCarouselTimer();
+}
+function carouselPrev() { carouselGo(carouselIdx - 1); }
+function carouselNext() { carouselGo(carouselIdx + 1); }
+function resetCarouselTimer() {
+    if (carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = setInterval(() => carouselNext(), 4000);
+}
+
+async function loadCarousel() {
+    const data = await api('/api/spot/carousel');
+    if (!data || !data.length) return;
+    carouselTotal = data.length;
+    document.getElementById('carouselTrack').innerHTML = data.map(s =>
+        '<div class="carousel-slide">' +
+            '<img class="slide-bg" src="' + API + (s.coverImage || '') + '" onerror="imgError(this)" alt="">' +
+            '<div class="slide-overlay"><div class="slide-info">' +
+                '<h2>' + (s.name || '') + '</h2>' +
+                '<p><i class="fas fa-map-marker-alt"></i> ' + (s.location || s.address || '') + '</p>' +
+            '</div></div>' +
+        '</div>'
+    ).join('');
+    document.getElementById('carouselDots').innerHTML = data.map((_, i) =>
+        '<span class="' + (i === 0 ? 'active' : '') + '" onclick="carouselGo(' + i + ')"></span>'
+    ).join('');
+    resetCarouselTimer();
+}
+
+async function loadHotSpots() {
+    const data = await api('/api/spot/hot?limit=6');
+    const el = document.getElementById('hotSpots');
+    if (!data || !data.length) { el.innerHTML = '<div class="empty"><i class="fas fa-mountain"></i><p>' + t('noData') + '</p></div>'; return; }
+    el.innerHTML = data.map(s =>
+        '<a class="card" href="spot-detail.html?id=' + s.id + '">' +
+            '<div class="card-img"><img src="' + API + (s.coverImage || '') + '" onerror="imgError(this)" alt=""></div>' +
+            '<div class="card-body">' +
+                '<h3>' + (s.name || '') + '</h3>' +
+                '<p>' + (s.description || s.intro || '') + '</p>' +
+                '<div class="card-meta">' +
+                    '<span class="card-price">' + (s.ticketPrice > 0 ? '¥' + s.ticketPrice : '<small>' + t('free') + '</small>') + '</span>' +
+                    '<span><i class="fas fa-eye"></i> ' + (s.viewCount || 0) + '</span>' +
+                '</div>' +
+            '</div>' +
+        '</a>'
+    ).join('');
+}
+
+async function loadRoutes() {
+    const data = await api('/api/route/list?page=1&size=3');
+    const el = document.getElementById('recRoutes');
+    const list = data ? (data.records || data.list || data) : [];
+    if (!list.length) { el.innerHTML = '<div class="empty"><i class="fas fa-route"></i><p>' + t('noData') + '</p></div>'; return; }
+    el.innerHTML = list.map(r =>
+        '<a class="card" href="route-detail.html?id=' + r.id + '">' +
+            '<div class="card-img"><img src="' + API + (r.coverImage || '') + '" onerror="imgError(this)" alt=""></div>' +
+            '<div class="card-body">' +
+                '<h3>' + (r.name || '') + '</h3>' +
+                '<p>' + (r.description || r.intro || '') + '</p>' +
+                '<div class="card-meta">' +
+                    '<span class="card-price">' + (r.budget > 0 ? '¥' + r.budget : '<small>' + t('free') + '</small>') + '</span>' +
+                    '<span><i class="fas fa-calendar-day"></i> ' + (r.days || 0) + t('day') + '</span>' +
+                '</div>' +
+            '</div>' +
+        '</a>'
+    ).join('');
+}
+
+async function loadCulture() {
+    const data = await api('/api/culture/list?page=1&size=4');
+    const el = document.getElementById('cultureList');
+    const list = data ? (data.records || data.list || data) : [];
+    if (!list.length) { el.innerHTML = '<div class="empty"><i class="fas fa-book"></i><p>' + t('noData') + '</p></div>'; return; }
+    el.innerHTML = list.map(c =>
+        '<a class="card" href="culture-detail.html?id=' + c.id + '">' +
+            '<div class="card-img"><img src="' + API + (c.coverImage || '') + '" onerror="imgError(this)" alt=""></div>' +
+            '<div class="card-body">' +
+                '<h3>' + (c.title || c.name || '') + '</h3>' +
+                '<p>' + (c.description || c.intro || '') + '</p>' +
+                '<div class="card-meta">' +
+                    '<span><i class="fas fa-eye"></i> ' + (c.viewCount || 0) + '</span>' +
+                '</div>' +
+            '</div>' +
+        '</a>'
+    ).join('');
+}
+
+loadCarousel();
+loadHotSpots();
+loadRoutes();
+loadCulture();
+</script>
+</body>
+</html>

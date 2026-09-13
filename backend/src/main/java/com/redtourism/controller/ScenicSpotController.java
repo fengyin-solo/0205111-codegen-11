@@ -1,0 +1,104 @@
+package com.redtourism.controller;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.redtourism.common.Result;
+import com.redtourism.entity.ScenicSpot;
+import com.redtourism.entity.ScenicSpotImage;
+import com.redtourism.service.ScenicSpotService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/spot")
+public class ScenicSpotController {
+
+    @Autowired
+    private ScenicSpotService spotService;
+
+    @GetMapping("/list")
+    public Result<IPage<ScenicSpot>> list(@RequestParam(defaultValue = "1") int page,
+                                           @RequestParam(defaultValue = "10") int size,
+                                           @RequestParam(required = false) String region,
+                                           @RequestParam(required = false) String theme,
+                                           @RequestParam(required = false) Integer status,
+                                           @RequestParam(required = false) String keyword,
+                                           @RequestParam(required = false) String orderBy,
+                                           @RequestParam(required = false, defaultValue = "zh") String lang) {
+        IPage<ScenicSpot> result = spotService.listSpots(page, size, region, theme, status, keyword, orderBy);
+        result.getRecords().forEach(s -> applyLang(s, lang));
+        return Result.success(result);
+    }
+
+    @GetMapping("/detail")
+    public Result<ScenicSpot> detail(@RequestParam Long id,
+                                      @RequestParam(required = false, defaultValue = "zh") String lang) {
+        ScenicSpot spot = spotService.getDetail(id);
+        if (spot != null) applyLang(spot, lang);
+        return Result.success(spot);
+    }
+
+    @GetMapping("/images")
+    public Result<List<ScenicSpotImage>> images(@RequestParam Long spotId) {
+        return Result.success(spotService.getImages(spotId));
+    }
+
+    @GetMapping("/carousel")
+    public Result<List<ScenicSpot>> carousel() {
+        return Result.success(spotService.getCarousel());
+    }
+
+    @GetMapping("/related")
+    public Result<List<ScenicSpot>> related(@RequestParam Long id) {
+        return Result.success(spotService.getRelated(id));
+    }
+
+    @GetMapping("/hot")
+    public Result<List<ScenicSpot>> hot(@RequestParam(defaultValue = "10") int limit) {
+        return Result.success(spotService.getHot(limit));
+    }
+
+    @GetMapping("/search")
+    public Result<IPage<ScenicSpot>> search(@RequestParam String keyword,
+                                             @RequestParam(defaultValue = "1") int page,
+                                             @RequestParam(defaultValue = "10") int size,
+                                             @RequestParam(required = false) String orderBy,
+                                             @RequestParam(required = false, defaultValue = "zh") String lang) {
+        IPage<ScenicSpot> result = spotService.listSpots(page, size, null, null, null, keyword, orderBy);
+        result.getRecords().forEach(s -> applyLang(s, lang));
+        return Result.success(result);
+    }
+
+    @GetMapping("/regions")
+    public Result<List<String>> regions() {
+        List<String> regions = java.util.Arrays.asList(
+                "贵阳市", "遵义市", "六盘水市", "安顺市", "毕节市",
+                "铜仁市", "黔东南州", "黔南州", "黔西南州");
+        return Result.success(regions);
+    }
+
+    @GetMapping("/themes")
+    public Result<List<String>> themes() {
+        List<String> themes = java.util.Arrays.asList(
+                "红色研学", "经典打卡", "革命遗址", "纪念馆", "战役遗址", "伟人故居");
+        return Result.success(themes);
+    }
+
+    private void applyLang(ScenicSpot s, String lang) {
+        if ("en".equals(lang)) {
+            if (s.getNameEn() != null && !s.getNameEn().isEmpty()) s.setName(s.getNameEn());
+            if (s.getDescriptionEn() != null && !s.getDescriptionEn().isEmpty()) s.setDescription(s.getDescriptionEn());
+            if (s.getTicketReservationEn() != null && !s.getTicketReservationEn().isEmpty()) s.setTicketReservation(s.getTicketReservationEn());
+            if (s.getSuggestedDurationEn() != null && !s.getSuggestedDurationEn().isEmpty()) s.setSuggestedDuration(s.getSuggestedDurationEn());
+            if (s.getItemsToBringEn() != null && !s.getItemsToBringEn().isEmpty()) s.setItemsToBring(s.getItemsToBringEn());
+        } else if ("ja".equals(lang)) {
+            if (s.getNameJa() != null && !s.getNameJa().isEmpty()) s.setName(s.getNameJa());
+            if (s.getDescriptionJa() != null && !s.getDescriptionJa().isEmpty()) s.setDescription(s.getDescriptionJa());
+            if (s.getTicketReservationJa() != null && !s.getTicketReservationJa().isEmpty()) s.setTicketReservation(s.getTicketReservationJa());
+            if (s.getSuggestedDurationJa() != null && !s.getSuggestedDurationJa().isEmpty()) s.setSuggestedDuration(s.getSuggestedDurationJa());
+            if (s.getItemsToBringJa() != null && !s.getItemsToBringJa().isEmpty()) s.setItemsToBring(s.getItemsToBringJa());
+        }
+    }
+}

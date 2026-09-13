@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span data-i18n="home">贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="form-page">
+    <div class="form-card">
+        <h2><i class="fas fa-flag" style="color:var(--red);margin-right:8px"></i>用户登录</h2>
+        <p class="subtitle">欢迎回来，请登录您的账号</p>
+        <div class="form-group">
+            <label><i class="fas fa-user"></i> 用户名</label>
+            <input type="text" id="username" placeholder="请输入用户名">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-lock"></i> 密码</label>
+            <input type="password" id="password" placeholder="请输入密码">
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" onclick="doLogin()">登 录</button>
+        </div>
+        <div class="form-footer">
+            <a href="register.html">注册新账号</a> &nbsp;|&nbsp; <a href="reset-password.html">忘记密码？</a>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+document.getElementById('password').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+});
+
+async function doLogin() {
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value.trim();
+    if (!username || !password) { showToast('请填写用户名和密码', 'error'); return; }
+    var data = await api('/api/auth/login?username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password));
+    if (data) {
+        saveUser(data);
+        showToast('登录成功');
+        setTimeout(function() { location.href = 'index.html'; }, 500);
+    }
+}
+</script>
+</body>
+</html>

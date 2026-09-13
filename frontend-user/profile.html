@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="profile-layout">
+        <div class="profile-sidebar">
+            <div class="profile-sidebar-header">
+                <div class="profile-avatar" id="sidebarAvatar"></div>
+                <h3 id="sidebarName"></h3>
+                <p id="sidebarPhone"></p>
+            </div>
+            <div class="profile-menu">
+                <a href="profile.html"><i class="fas fa-user"></i><span>个人中心</span></a>
+                <a href="favorites.html"><i class="fas fa-heart"></i><span>我的收藏</span></a>
+                <a href="orders.html"><i class="fas fa-shopping-bag"></i><span>我的订单</span></a>
+                <a href="messages.html"><i class="fas fa-bell"></i><span>消息通知</span></a>
+                <a href="my-routes.html"><i class="fas fa-route"></i><span>我的线路</span></a>
+                <a href="feedback.html"><i class="fas fa-bullhorn"></i><span>问题反馈</span></a>
+            </div>
+        </div>
+        <div class="profile-content">
+            <div class="profile-section-header">
+                <span class="profile-section-header-title"><i class="fas fa-user-circle"></i>个人中心</span>
+            </div>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('info')">个人信息</div>
+                <div class="tab" onclick="switchTab('password')">修改密码</div>
+            </div>
+
+            <div id="tabInfo" class="profile-form-wrap">
+                <!-- 头像区 -->
+                <div class="avatar-edit-block">
+                    <div class="avatar-edit-photo">
+                        <div id="avatarPreview" class="avatar-edit-img"></div>
+                        <label class="avatar-edit-badge" for="avatarFile" title="更换头像">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="avatarFile" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" onchange="uploadAvatar(this)">
+                        <input type="hidden" id="avatarUrl">
+                    </div>
+                    <div class="avatar-edit-info">
+                        <div class="avatar-edit-label">头像</div>
+                        <div id="uploadStatus" class="avatar-edit-hint">支持 JPG / PNG / GIF / WebP，最大 10MB</div>
+                        <button class="btn btn-outline btn-sm" style="margin-top:10px;width:fit-content" onclick="document.getElementById('avatarFile').click()">
+                            <i class="fas fa-camera"></i> 更换头像
+                        </button>
+                    </div>
+                </div>
+                <!-- 表单字段 -->
+                <div class="profile-fields">
+                    <div class="form-group">
+                        <label>昵称</label>
+                        <input type="text" id="nickname" placeholder="请输入昵称">
+                    </div>
+                    <div class="form-group">
+                        <label>手机号</label>
+                        <input type="text" id="phone" placeholder="请输入手机号">
+                    </div>
+                    <div class="profile-form-actions">
+                        <button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i> 保存修改</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabPassword" style="display:none" class="profile-form-wrap">
+                <div class="profile-fields">
+                    <div class="form-group">
+                        <label>原密码</label>
+                        <input type="password" id="oldPwd" placeholder="请输入原密码">
+                    </div>
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <input type="password" id="newPwd" placeholder="请输入新密码">
+                    </div>
+                    <div class="form-group">
+                        <label>确认新密码</label>
+                        <input type="password" id="confirmPwd" placeholder="请再次输入新密码">
+                    </div>
+                    <div class="profile-form-actions">
+                        <button class="btn btn-primary" onclick="changePassword()"><i class="fas fa-lock"></i> 修改密码</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+if (!requireLogin()) throw new Error('need login');
+
+const user = getUser();
+
+function renderSidebar() {
+    const u = getUser();
+    const initial = (u.nickname || u.username || '?').charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = u.nickname || u.username || '';
+    document.getElementById('sidebarPhone').textContent = u.phone || '';
+    if (u.avatar) {
+        document.getElementById('sidebarAvatar').innerHTML = '<img src="' + API + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent=\'' + initial + '\'">';
+    }
+}
+
+function setAvatarPreview(url) {
+    const el = document.getElementById('avatarPreview');
+    const u = getUser();
+    const initial = (u.nickname || u.username || '?').charAt(0).toUpperCase();
+    if (url) {
+        el.innerHTML = '<img src="' + (url.startsWith('http') ? '' : API) + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent=\'' + initial + '\'">';
+    } else {
+        el.textContent = initial;
+    }
+}
+
+function initForm() {
+    const u = getUser();
+    document.getElementById('nickname').value = u.nickname || '';
+    document.getElementById('phone').value = u.phone || '';
+    document.getElementById('avatarUrl').value = u.avatar || '';
+    setAvatarPreview(u.avatar);
+    renderSidebar();
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tabs .tab').forEach((t, i) => t.classList.toggle('active', (tab === 'info' ? i === 0 : i === 1)));
+    document.getElementById('tabInfo').style.display = tab === 'info' ? 'block' : 'none';
+    document.getElementById('tabPassword').style.display = tab === 'password' ? 'block' : 'none';
+}
+
+async function uploadAvatar(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const statusEl = document.getElementById('uploadStatus');
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showToast('只支持上传图片文件（JPG/PNG/GIF/WebP）', 'error');
+        input.value = '';
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('图片大小不能超过10MB', 'error');
+        input.value = '';
+        return;
+    }
+
+    statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
+    statusEl.style.color = 'var(--text2)';
+
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch(API + '/api/file/upload', { method: 'POST', body: fd, credentials: 'include' });
+        if (!res.ok) { throw new Error('HTTP ' + res.status); }
+        const data = await res.json();
+        if (data.code === 200 && data.data) {
+            document.getElementById('avatarUrl').value = data.data;
+            setAvatarPreview(data.data);
+            statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:var(--success)"></i> 上传成功，点击保存修改生效';
+            statusEl.style.color = 'var(--success)';
+            showToast('头像上传成功');
+        } else {
+            throw new Error(data.msg || '上传失败');
+        }
+    } catch (e) {
+        statusEl.innerHTML = '<i class="fas fa-exclamation-circle" style="color:var(--red)"></i> ' + e.message;
+        statusEl.style.color = 'var(--red)';
+        showToast(e.message || '上传失败', 'error');
+        input.value = '';
+    }
+}
+
+async function saveProfile() {
+    const nickname = document.getElementById('nickname').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const avatar = document.getElementById('avatarUrl').value.trim();
+    if (!nickname) { showToast('请输入昵称', 'warn'); return; }
+    const data = await api('/api/user/updateProfile?nickname=' + encodeURIComponent(nickname) + '&phone=' + encodeURIComponent(phone) + '&avatar=' + encodeURIComponent(avatar));
+    if (data !== null) {
+        const u = getUser();
+        u.nickname = nickname;
+        u.phone = phone;
+        u.avatar = avatar;
+        saveUser(u);
+        renderSidebar();
+        renderHeader();
+        showToast('保存成功');
+    }
+}
+
+async function changePassword() {
+    const oldPwd = document.getElementById('oldPwd').value;
+    const newPwd = document.getElementById('newPwd').value;
+    const confirmPwd = document.getElementById('confirmPwd').value;
+    if (!oldPwd || !newPwd) { showToast('请填写完整', 'warn'); return; }
+    if (newPwd !== confirmPwd) { showToast('两次密码不一致', 'warn'); return; }
+    if (newPwd.length < 6) { showToast('密码至少6位', 'warn'); return; }
+    const data = await api('/api/user/updatePassword?oldPassword=' + encodeURIComponent(oldPwd) + '&newPassword=' + encodeURIComponent(newPwd));
+    if (data !== null) {
+        showToast('密码修改成功，请重新登录');
+        clearUser();
+        setTimeout(() => location.href = 'login.html', 1500);
+    }
+}
+
+initForm();
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 景点管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><i class="fas fa-flag"></i> 管理后台</div>
+        <nav class="sidebar-nav">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> 仪表盘</a>
+            <a href="users.html"><i class="fas fa-users"></i> 用户管理</a>
+            <a href="spots.html"><i class="fas fa-map-marker-alt"></i> 景点管理</a>
+            <a href="routes.html"><i class="fas fa-route"></i> 线路管理</a>
+            <a href="culture.html"><i class="fas fa-book"></i> 文化管理</a>
+            <a href="hotels.html"><i class="fas fa-hotel"></i> 酒店管理</a>
+            <a href="foods.html"><i class="fas fa-utensils"></i> 美食管理</a>
+            <a href="comments.html"><i class="fas fa-comments"></i> 留言管理</a>
+            <a href="orders.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
+            <a href="faqs.html"><i class="fas fa-question-circle"></i> FAQ管理</a>
+            <div style="border-top:1px solid rgba(255,255,255,.12);margin:8px 12px"></div>
+            <a href="feedbacks.html"><i class="fas fa-bullhorn"></i> 问题反馈</a>
+            <a href="route-review.html"><i class="fas fa-clipboard-check"></i> 线路审核</a>
+            <a href="spot-review.html"><i class="fas fa-search-plus"></i> 景点审核</a>
+            <a href="permissions.html"><i class="fas fa-shield-alt"></i> 权限配置</a>
+            <a href="customer-service.html"><i class="fas fa-headset"></i> 人工客服</a>
+        </nav>
+    </aside>
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1>景点管理</h1>
+            <div class="top-bar-right"><span id="adminName"></span> <a href="#" onclick="doLogout()">退出</a></div>
+        </header>
+        <div class="content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>景点列表</h2>
+                    <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> 新增景点</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>ID</th><th>封面</th><th>名称</th><th>地区</th><th>主题</th><th>门票价格</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody id="tableBody"><tr><td colspan="8" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="formModal">
+    <div class="modal" style="width:680px">
+        <div class="modal-header"><h3 id="modalTitle">新增景点</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="fId">
+            <div class="form-row">
+                <div class="form-group"><label>名称</label><input class="form-control" id="fName" placeholder="景点名称"></div>
+                <div class="form-group"><label>地区</label><input class="form-control" id="fRegion" placeholder="所属地区"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>主题</label><input class="form-control" id="fTheme" placeholder="主题标签"></div>
+                <div class="form-group"><label>门票价格</label><input class="form-control" id="fTicketPrice" type="number" placeholder="0"></div>
+            </div>
+            <div class="form-group"><label>地址</label><input class="form-control" id="fLocation" placeholder="详细地址"></div>
+            <div class="form-group"><label>开放时间</label><input class="form-control" id="fOpenTime" placeholder="如: 08:00-18:00"></div>
+            <div class="form-group"><label>交通信息</label><input class="form-control" id="fTrafficInfo" placeholder="交通指引"></div>
+            <div class="form-group">
+                <label>封面图片</label>
+                <div class="img-upload-area">
+                    <img id="coverPreview" src="" style="display:none" onerror="imgError(this)">
+                    <input type="file" id="coverFile" accept="image/*" onchange="handleUpload()">
+                    <input type="hidden" id="fCoverImage">
+                </div>
+            </div>
+            <div class="form-group"><label>历史背景</label><textarea class="form-control" id="fHistoryBackground" placeholder="历史背景介绍"></textarea></div>
+            <div class="form-group"><label>革命事件</label><textarea class="form-control" id="fRevolutionEvent" placeholder="相关革命事件"></textarea></div>
+            <div class="form-group"><label>人物故事</label><textarea class="form-control" id="fPersonStory" placeholder="相关人物故事"></textarea></div>
+            <div class="form-group"><label>门票预约</label><textarea class="form-control" id="fTicketReservation" placeholder="门票预约方式、注意事项等"></textarea></div>
+            <div class="form-group"><label>建议停留</label><input class="form-control" id="fSuggestedDuration" placeholder="如：建议停留2-3小时"></div>
+            <div class="form-group"><label>随身物品提醒</label><textarea class="form-control" id="fItemsToBring" placeholder="如：身份证、口罩、舒适步行鞋等"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label>经度</label><input class="form-control" id="fLongitude" type="number" step="any" placeholder="经度"></div>
+                <div class="form-group"><label>纬度</label><input class="form-control" id="fLatitude" type="number" step="any" placeholder="纬度"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveItem()"><i class="fas fa-save"></i> 保存</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-common.js"></script>
+<script>
+if (!requireAdmin()) throw '';
+renderSidebar();
+
+let currentPage = 1;
+
+async function loadData(page) {
+    currentPage = page;
+    document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    const data = await api(`/api/admin/spot/list?page=${page}&size=10`);
+    if (!data) { document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="empty-state">加载失败</td></tr>'; return; }
+
+    const list = data.records || data.list || data || [];
+    const total = data.pages || data.totalPages || Math.ceil((data.total || list.length) / 10);
+    if (!list.length) { document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> 暂无数据</td></tr>'; document.getElementById('pagination').innerHTML = ''; return; }
+
+    let h = '';
+    list.forEach(s => {
+        const statusBadge = s.status === 0 ? '<span class="badge badge-danger">关闭</span>' : '<span class="badge badge-success">开放</span>';
+        const toggleText = s.status === 0 ? '开放' : '关闭';
+        const toggleClass = s.status === 0 ? 'btn-success' : 'btn-warning';
+        const cover = s.coverImage ? `<img src="${imgSrc(s.coverImage)}" class="img-preview" onerror="imgError(this)">` : '-';
+        h += `<tr>
+            <td>${s.id}</td>
+            <td>${cover}</td>
+            <td>${escHtml(s.name)}</td>
+            <td>${escHtml(s.region || '-')}</td>
+            <td>${escHtml(s.theme || '-')}</td>
+            <td>${s.ticketPrice != null ? '¥' + s.ticketPrice : '-'}</td>
+            <td>${statusBadge}</td>
+            <td class="action-btns">
+                <button class="btn btn-sm btn-info" onclick="editItem(${s.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm ${toggleClass}" onclick="toggleStatus(${s.id})">${toggleText}</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteItem(${s.id})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('tableBody').innerHTML = h;
+    renderPagination('pagination', currentPage, total, 'loadData');
+}
+
+function openModal(item) {
+    document.getElementById('modalTitle').textContent = item ? '编辑景点' : '新增景点';
+    document.getElementById('fId').value = item ? item.id : '';
+    document.getElementById('fName').value = item ? item.name || '' : '';
+    document.getElementById('fRegion').value = item ? item.region || '' : '';
+    document.getElementById('fTheme').value = item ? item.theme || '' : '';
+    document.getElementById('fTicketPrice').value = item ? item.ticketPrice || '' : '';
+    document.getElementById('fLocation').value = item ? item.location || '' : '';
+    document.getElementById('fOpenTime').value = item ? item.openTime || '' : '';
+    document.getElementById('fTrafficInfo').value = item ? item.trafficInfo || '' : '';
+    document.getElementById('fCoverImage').value = item ? item.coverImage || '' : '';
+    document.getElementById('fHistoryBackground').value = item ? item.historyBackground || '' : '';
+    document.getElementById('fRevolutionEvent').value = item ? item.revolutionEvent || '' : '';
+    document.getElementById('fPersonStory').value = item ? item.personStory || '' : '';
+    document.getElementById('fTicketReservation').value = item ? item.ticketReservation || '' : '';
+    document.getElementById('fSuggestedDuration').value = item ? item.suggestedDuration || '' : '';
+    document.getElementById('fItemsToBring').value = item ? item.itemsToBring || '' : '';
+    document.getElementById('fLongitude').value = item ? item.longitude || '' : '';
+    document.getElementById('fLatitude').value = item ? item.latitude || '' : '';
+    const preview = document.getElementById('coverPreview');
+    if (item && item.coverImage) { preview.src = imgSrc(item.coverImage); preview.style.display = ''; } else { preview.style.display = 'none'; }
+    document.getElementById('coverFile').value = '';
+    document.getElementById('formModal').classList.add('active');
+}
+
+function closeModal() { document.getElementById('formModal').classList.remove('active'); }
+
+async function editItem(id) {
+    const data = await api('/api/spot/detail?id=' + id);
+    if (data) openModal(data);
+}
+
+async function handleUpload() {
+    const url = await uploadFile(document.getElementById('coverFile'));
+    if (url) {
+        document.getElementById('fCoverImage').value = url;
+        document.getElementById('coverPreview').src = imgSrc(url);
+        document.getElementById('coverPreview').style.display = '';
+    }
+}
+
+async function saveItem() {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { showToast('请输入景点名称', 'warning'); return; }
+    const fields = { name, region: document.getElementById('fRegion').value.trim(), theme: document.getElementById('fTheme').value.trim(),
+        ticketPrice: document.getElementById('fTicketPrice').value, location: document.getElementById('fLocation').value.trim(),
+        openTime: document.getElementById('fOpenTime').value.trim(), trafficInfo: document.getElementById('fTrafficInfo').value.trim(),
+        coverImage: document.getElementById('fCoverImage').value, historyBackground: document.getElementById('fHistoryBackground').value.trim(),
+        revolutionEvent: document.getElementById('fRevolutionEvent').value.trim(), personStory: document.getElementById('fPersonStory').value.trim(),
+        ticketReservation: document.getElementById('fTicketReservation').value.trim(), suggestedDuration: document.getElementById('fSuggestedDuration').value.trim(),
+        itemsToBring: document.getElementById('fItemsToBring').value.trim(),
+        longitude: document.getElementById('fLongitude').value, latitude: document.getElementById('fLatitude').value };
+    const id = document.getElementById('fId').value;
+    if (id) fields.id = id;
+    const params = Object.entries(fields).filter(([,v]) => v !== '').map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+    const data = await api('/api/admin/spot/save?' + params);
+    if (data !== null) { showToast('保存成功'); closeModal(); loadData(currentPage); }
+}
+
+async function toggleStatus(id) {
+    const data = await api('/api/admin/spot/toggleStatus?id=' + id);
+    if (data !== null) { showToast('操作成功'); loadData(currentPage); }
+}
+
+function deleteItem(id) {
+    showConfirm('确定要删除该景点吗？', async () => {
+        const data = await api('/api/admin/spot/delete?id=' + id);
+        if (data !== null) { showToast('删除成功'); loadData(currentPage); }
+    });
+}
+
+loadData(1);
+</script>
+</body>
+</html>

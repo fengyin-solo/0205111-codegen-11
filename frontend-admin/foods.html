@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 美食管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><i class="fas fa-flag"></i> 管理后台</div>
+        <nav class="sidebar-nav">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> 仪表盘</a>
+            <a href="users.html"><i class="fas fa-users"></i> 用户管理</a>
+            <a href="spots.html"><i class="fas fa-map-marker-alt"></i> 景点管理</a>
+            <a href="routes.html"><i class="fas fa-route"></i> 线路管理</a>
+            <a href="culture.html"><i class="fas fa-book"></i> 文化管理</a>
+            <a href="hotels.html"><i class="fas fa-hotel"></i> 酒店管理</a>
+            <a href="foods.html"><i class="fas fa-utensils"></i> 美食管理</a>
+            <a href="comments.html"><i class="fas fa-comments"></i> 留言管理</a>
+            <a href="orders.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
+            <a href="faqs.html"><i class="fas fa-question-circle"></i> FAQ管理</a>
+            <div style="border-top:1px solid rgba(255,255,255,.12);margin:8px 12px"></div>
+            <a href="feedbacks.html"><i class="fas fa-bullhorn"></i> 问题反馈</a>
+            <a href="route-review.html"><i class="fas fa-clipboard-check"></i> 线路审核</a>
+            <a href="spot-review.html"><i class="fas fa-search-plus"></i> 景点审核</a>
+            <a href="permissions.html"><i class="fas fa-shield-alt"></i> 权限配置</a>
+            <a href="customer-service.html"><i class="fas fa-headset"></i> 人工客服</a>
+        </nav>
+    </aside>
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1>美食管理</h1>
+            <div class="top-bar-right"><span id="adminName"></span> <a href="#" onclick="doLogout()">退出</a></div>
+        </header>
+        <div class="content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('food')">美食管理</button>
+                <button class="tab-btn" onclick="switchTab('store')">门店管理</button>
+            </div>
+
+            <div class="tab-content active" id="tabFood">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>美食列表</h2>
+                        <button class="btn btn-primary" onclick="openFoodModal()"><i class="fas fa-plus"></i> 新增美食</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>ID</th><th>封面</th><th>名称</th><th>分类</th><th>价格</th><th>门店</th><th>操作</th></tr></thead>
+                            <tbody id="foodBody"><tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="foodPagination"></div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tabStore">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>门店列表</h2>
+                        <button class="btn btn-primary" onclick="openStoreModal()"><i class="fas fa-plus"></i> 新增门店</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>ID</th><th>封面</th><th>名称</th><th>地址</th><th>分类</th><th>卫生等级</th><th>电话</th><th>操作</th></tr></thead>
+                            <tbody id="storeBody"><tr><td colspan="8" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="storePagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="foodModal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="foodModalTitle">新增美食</h3><button class="modal-close" onclick="closeFoodModal()">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="ffId">
+            <div class="form-group"><label>名称</label><input class="form-control" id="ffName" placeholder="美食名称"></div>
+            <div class="form-group"><label>描述</label><textarea class="form-control" id="ffDescription" placeholder="美食描述"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label>分类</label><input class="form-control" id="ffCategory" placeholder="分类"></div>
+                <div class="form-group"><label>价格</label><input class="form-control" id="ffPrice" type="number" placeholder="价格"></div>
+            </div>
+            <div class="form-group">
+                <label>所属门店</label>
+                <select class="form-control" id="ffStoreId"><option value="">请选择门店</option></select>
+            </div>
+            <div class="form-group">
+                <label>封面图片</label>
+                <div class="img-upload-area">
+                    <img id="foodCoverPreview" src="" style="display:none" onerror="imgError(this)">
+                    <input type="file" id="foodCoverFile" accept="image/*" onchange="handleFoodUpload()">
+                    <input type="hidden" id="ffCoverImage">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeFoodModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveFood()"><i class="fas fa-save"></i> 保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="storeModal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="storeModalTitle">新增门店</h3><button class="modal-close" onclick="closeStoreModal()">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="fsId">
+            <div class="form-group"><label>名称</label><input class="form-control" id="fsName" placeholder="门店名称"></div>
+            <div class="form-group"><label>地址</label><input class="form-control" id="fsLocation" placeholder="门店地址"></div>
+            <div class="form-row">
+                <div class="form-group"><label>分类</label><input class="form-control" id="fsCategory" placeholder="经营分类"></div>
+                <div class="form-group"><label>卫生等级</label><input class="form-control" id="fsHygieneLevel" placeholder="如: A级"></div>
+            </div>
+            <div class="form-group"><label>电话</label><input class="form-control" id="fsPhone" placeholder="联系电话"></div>
+            <div class="form-group">
+                <label>封面图片</label>
+                <div class="img-upload-area">
+                    <img id="storeCoverPreview" src="" style="display:none" onerror="imgError(this)">
+                    <input type="file" id="storeCoverFile" accept="image/*" onchange="handleStoreUpload()">
+                    <input type="hidden" id="fsCoverImage">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeStoreModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveStore()"><i class="fas fa-save"></i> 保存</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-common.js"></script>
+<script>
+if (!requireAdmin()) throw '';
+renderSidebar();
+
+let foodPage = 1, storePage = 1;
+let stores = [];
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (tab === 'food' ? i === 0 : i === 1)));
+    document.getElementById('tabFood').classList.toggle('active', tab === 'food');
+    document.getElementById('tabStore').classList.toggle('active', tab === 'store');
+}
+
+async function loadStores(page) {
+    storePage = page || 1;
+    document.getElementById('storeBody').innerHTML = '<tr><td colspan="8" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    const data = await api(`/api/food/stores?page=${storePage}&size=10`);
+    if (!data) { document.getElementById('storeBody').innerHTML = '<tr><td colspan="8" class="empty-state">加载失败</td></tr>'; return; }
+
+    const list = data.records || data.list || data || [];
+    stores = Array.isArray(data) ? data : list;
+    const total = data.pages || data.totalPages || Math.ceil((data.total || list.length) / 10);
+    updateStoreSelect();
+
+    if (!list.length) { document.getElementById('storeBody').innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> 暂无数据</td></tr>'; document.getElementById('storePagination').innerHTML = ''; return; }
+
+    let h = '';
+    list.forEach(s => {
+        const cover = s.coverImage ? `<img src="${imgSrc(s.coverImage)}" class="img-preview" onerror="imgError(this)">` : '-';
+        h += `<tr>
+            <td>${s.id}</td>
+            <td>${cover}</td>
+            <td>${escHtml(s.name)}</td>
+            <td>${escHtml(s.location || '-')}</td>
+            <td>${escHtml(s.category || '-')}</td>
+            <td>${escHtml(s.hygieneLevel || '-')}</td>
+            <td>${escHtml(s.phone || '-')}</td>
+            <td class="action-btns">
+                <button class="btn btn-sm btn-info" onclick="editStore(${s.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStore(${s.id})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('storeBody').innerHTML = h;
+    renderPagination('storePagination', storePage, total, 'loadStores');
+}
+
+function updateStoreSelect() {
+    const sel = document.getElementById('ffStoreId');
+    let h = '<option value="">请选择门店</option>';
+    stores.forEach(s => { h += `<option value="${s.id}">${escHtml(s.name)}</option>`; });
+    sel.innerHTML = h;
+}
+
+async function loadFoods(page) {
+    foodPage = page || 1;
+    document.getElementById('foodBody').innerHTML = '<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    const data = await api(`/api/food/list?page=${foodPage}&size=10`);
+    if (!data) { document.getElementById('foodBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>'; return; }
+
+    const list = data.records || data.list || data || [];
+    const total = data.pages || data.totalPages || Math.ceil((data.total || list.length) / 10);
+    if (!list.length) { document.getElementById('foodBody').innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> 暂无数据</td></tr>'; document.getElementById('foodPagination').innerHTML = ''; return; }
+
+    let h = '';
+    list.forEach(f => {
+        const cover = f.coverImage ? `<img src="${imgSrc(f.coverImage)}" class="img-preview" onerror="imgError(this)">` : '-';
+        h += `<tr>
+            <td>${f.id}</td>
+            <td>${cover}</td>
+            <td>${escHtml(f.name)}</td>
+            <td>${escHtml(f.category || '-')}</td>
+            <td>${f.price != null ? '¥' + f.price : '-'}</td>
+            <td>${escHtml(f.storeName || '-')}</td>
+            <td class="action-btns">
+                <button class="btn btn-sm btn-info" onclick="editFood(${f.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteFood(${f.id})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('foodBody').innerHTML = h;
+    renderPagination('foodPagination', foodPage, total, 'loadFoods');
+}
+
+function openFoodModal(item) {
+    document.getElementById('foodModalTitle').textContent = item ? '编辑美食' : '新增美食';
+    document.getElementById('ffId').value = item ? item.id : '';
+    document.getElementById('ffName').value = item ? item.name || '' : '';
+    document.getElementById('ffDescription').value = item ? item.description || '' : '';
+    document.getElementById('ffCategory').value = item ? item.category || '' : '';
+    document.getElementById('ffPrice').value = item ? item.price || '' : '';
+    document.getElementById('ffCoverImage').value = item ? item.coverImage || '' : '';
+    updateStoreSelect();
+    if (item) document.getElementById('ffStoreId').value = item.storeId || '';
+    const preview = document.getElementById('foodCoverPreview');
+    if (item && item.coverImage) { preview.src = imgSrc(item.coverImage); preview.style.display = ''; } else { preview.style.display = 'none'; }
+    document.getElementById('foodCoverFile').value = '';
+    document.getElementById('foodModal').classList.add('active');
+}
+function closeFoodModal() { document.getElementById('foodModal').classList.remove('active'); }
+
+async function editFood(id) {
+    const data = await api('/api/food/detail?id=' + id);
+    if (data) openFoodModal(data);
+}
+
+async function handleFoodUpload() {
+    const url = await uploadFile(document.getElementById('foodCoverFile'));
+    if (url) { document.getElementById('ffCoverImage').value = url; document.getElementById('foodCoverPreview').src = imgSrc(url); document.getElementById('foodCoverPreview').style.display = ''; }
+}
+
+async function saveFood() {
+    const name = document.getElementById('ffName').value.trim();
+    if (!name) { showToast('请输入美食名称', 'warning'); return; }
+    const fields = { name, description: document.getElementById('ffDescription').value.trim(),
+        category: document.getElementById('ffCategory').value.trim(), price: document.getElementById('ffPrice').value,
+        storeId: document.getElementById('ffStoreId').value, coverImage: document.getElementById('ffCoverImage').value };
+    const id = document.getElementById('ffId').value;
+    if (id) fields.id = id;
+    const params = Object.entries(fields).filter(([,v]) => v !== '').map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+    const data = await api('/api/admin/food/save?' + params);
+    if (data !== null) { showToast('保存成功'); closeFoodModal(); loadFoods(foodPage); }
+}
+
+function deleteFood(id) {
+    showConfirm('确定要删除该美食吗？', async () => {
+        const data = await api('/api/admin/food/delete?id=' + id);
+        if (data !== null) { showToast('删除成功'); loadFoods(foodPage); }
+    });
+}
+
+function openStoreModal(item) {
+    document.getElementById('storeModalTitle').textContent = item ? '编辑门店' : '新增门店';
+    document.getElementById('fsId').value = item ? item.id : '';
+    document.getElementById('fsName').value = item ? item.name || '' : '';
+    document.getElementById('fsLocation').value = item ? item.location || '' : '';
+    document.getElementById('fsCategory').value = item ? item.category || '' : '';
+    document.getElementById('fsHygieneLevel').value = item ? item.hygieneLevel || '' : '';
+    document.getElementById('fsPhone').value = item ? item.phone || '' : '';
+    document.getElementById('fsCoverImage').value = item ? item.coverImage || '' : '';
+    const preview = document.getElementById('storeCoverPreview');
+    if (item && item.coverImage) { preview.src = imgSrc(item.coverImage); preview.style.display = ''; } else { preview.style.display = 'none'; }
+    document.getElementById('storeCoverFile').value = '';
+    document.getElementById('storeModal').classList.add('active');
+}
+function closeStoreModal() { document.getElementById('storeModal').classList.remove('active'); }
+
+async function editStore(id) {
+    const data = await api('/api/food/store/detail?id=' + id);
+    if (data) openStoreModal(data);
+}
+
+async function handleStoreUpload() {
+    const url = await uploadFile(document.getElementById('storeCoverFile'));
+    if (url) { document.getElementById('fsCoverImage').value = url; document.getElementById('storeCoverPreview').src = imgSrc(url); document.getElementById('storeCoverPreview').style.display = ''; }
+}
+
+async function saveStore() {
+    const name = document.getElementById('fsName').value.trim();
+    if (!name) { showToast('请输入门店名称', 'warning'); return; }
+    const fields = { name, location: document.getElementById('fsLocation').value.trim(),
+        category: document.getElementById('fsCategory').value.trim(), hygieneLevel: document.getElementById('fsHygieneLevel').value.trim(),
+        phone: document.getElementById('fsPhone').value.trim(), coverImage: document.getElementById('fsCoverImage').value };
+    const id = document.getElementById('fsId').value;
+    if (id) fields.id = id;
+    const params = Object.entries(fields).filter(([,v]) => v !== '').map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+    const data = await api('/api/admin/food/store/save?' + params);
+    if (data !== null) { showToast('保存成功'); closeStoreModal(); loadStores(storePage); }
+}
+
+function deleteStore(id) {
+    showConfirm('确定要删除该门店吗？', async () => {
+        const data = await api('/api/admin/food/store/delete?id=' + id);
+        if (data !== null) { showToast('删除成功'); loadStores(storePage); }
+    });
+}
+
+loadStores(1);
+loadFoods(1);
+</script>
+</body>
+</html>

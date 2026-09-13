@@ -1,0 +1,17 @@
+package com.redtourism.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import java.io.Serializable;
+
+@Data
+@TableName("sys_role_menu")
+public class SysRoleMenu implements Serializable {
+    private static final long serialVersionUID = 1L;
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    private String roleCode;
+    private String menuKey;
+    private String menuName;
+    private Integer enabled;
+}

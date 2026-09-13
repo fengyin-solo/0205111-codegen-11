@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 问题反馈</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        .fb-card{background:#fff;border-radius:8px;border:1px solid #e8e8e8;padding:18px 20px;margin-bottom:12px;transition:box-shadow .2s}
+        .fb-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+        .fb-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .fb-meta{font-size:12px;color:#888;margin-bottom:8px}
+        .fb-content{font-size:13px;color:#444;line-height:1.7;padding:8px 12px;background:#fafafa;border-radius:4px;border-left:3px solid #e0e0e0}
+        .fb-reply{background:#f6ffed;border-left:3px solid #52c41a;padding:8px 12px;border-radius:4px;font-size:13px;margin-top:8px}
+        .fb-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+        .cat-tag{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+        .cat-BUG{background:#fff1f0;color:#ff4d4f}
+        .cat-SUGGESTION{background:#e6f7ff;color:#1890ff}
+        .cat-COMPLAINT{background:#fff7e6;color:#d48806}
+        .cat-GENERAL{background:#f5f5f5;color:#595959}
+        .status-PENDING{color:#d48806;font-weight:600}
+        .status-PROCESSING{color:#1890ff;font-weight:600}
+        .status-RESOLVED{color:#52c41a;font-weight:600}
+        .filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+        .filter-bar select,.filter-bar input{padding:7px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px}
+        .badge-count{background:#ff4d4f;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:6px}
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><i class="fas fa-flag"></i> 管理后台</div>
+        <nav class="sidebar-nav">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> 仪表盘</a>
+            <a href="users.html"><i class="fas fa-users"></i> 用户管理</a>
+            <a href="spots.html"><i class="fas fa-map-marker-alt"></i> 景点管理</a>
+            <a href="routes.html"><i class="fas fa-route"></i> 线路管理</a>
+            <a href="culture.html"><i class="fas fa-book"></i> 文化管理</a>
+            <a href="hotels.html"><i class="fas fa-hotel"></i> 酒店管理</a>
+            <a href="foods.html"><i class="fas fa-utensils"></i> 美食管理</a>
+            <a href="comments.html"><i class="fas fa-comments"></i> 留言管理</a>
+            <a href="orders.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
+            <a href="faqs.html"><i class="fas fa-question-circle"></i> FAQ管理</a>
+            <div style="border-top:1px solid rgba(255,255,255,.12);margin:8px 12px"></div>
+            <a href="feedbacks.html" class="active"><i class="fas fa-bullhorn"></i> 问题反馈</a>
+            <a href="route-review.html"><i class="fas fa-clipboard-check"></i> 线路审核</a>
+            <a href="spot-review.html"><i class="fas fa-search-plus"></i> 景点审核</a>
+            <a href="permissions.html"><i class="fas fa-shield-alt"></i> 权限配置</a>
+            <a href="customer-service.html"><i class="fas fa-headset"></i> 人工客服</a>
+        </nav>
+    </aside>
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1>问题反馈管理</h1>
+            <div class="top-bar-right"><span id="adminName"></span> <a href="#" onclick="doLogout()">退出</a></div>
+        </header>
+        <div class="content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>用户反馈 <span id="pendingBadge" class="badge-count" style="display:none"></span></h2>
+                </div>
+                <div class="filter-bar">
+                    <select id="statusFilter" onchange="load()">
+                        <option value="">全部状态</option>
+                        <option value="PENDING" selected>待处理</option>
+                        <option value="PROCESSING">处理中</option>
+                        <option value="RESOLVED">已解决</option>
+                    </select>
+                    <select id="catFilter" onchange="load()">
+                        <option value="">全部类型</option>
+                        <option value="BUG">Bug报告</option>
+                        <option value="SUGGESTION">功能建议</option>
+                        <option value="COMPLAINT">投诉</option>
+                        <option value="GENERAL">一般反馈</option>
+                    </select>
+                    <input id="kw" type="text" placeholder="搜索关键词…" onkeydown="if(event.key==='Enter')load()">
+                    <button class="btn btn-primary btn-sm" onclick="load()"><i class="fas fa-search"></i> 搜索</button>
+                </div>
+                <div id="listWrap"><div class="loading"><i class="fas fa-spinner fa-spin"></i></div></div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 回复弹窗 -->
+<div class="modal-overlay" id="replyModal" style="display:none">
+    <div class="modal" style="max-width:460px;padding:28px">
+        <div style="font-size:16px;font-weight:600;margin-bottom:16px">回复反馈</div>
+        <input type="hidden" id="replyId">
+        <div class="form-group">
+            <label>回复内容</label>
+            <textarea id="replyText" style="width:100%;padding:10px;border:1px solid #d9d9d9;border-radius:6px;height:110px;resize:vertical;font-size:13px" placeholder="请输入回复内容…"></textarea>
+        </div>
+        <div class="form-group" style="margin-top:10px">
+            <label>处理状态</label>
+            <select id="replyStatus" style="width:100%;padding:8px 12px 8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;padding-right:36px">
+                <option value="PROCESSING">处理中</option>
+                <option value="RESOLVED" selected>已解决</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+            <button class="btn btn-default" onclick="closeReply()">取消</button>
+            <button class="btn btn-primary" onclick="doReply()">发送回复</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-common.js"></script>
+<script>
+if (!requireAdmin()) throw '';
+renderSidebar();
+let currentPage = 1;
+
+async function load() {
+    const status = document.getElementById('statusFilter').value;
+    const category = document.getElementById('catFilter').value;
+    const kw = document.getElementById('kw').value.trim();
+    const data = await api(`/api/feedback/admin/list?page=${currentPage}&size=15&status=${encodeURIComponent(status)}&category=${encodeURIComponent(category)}&keyword=${encodeURIComponent(kw)}`);
+    if (!data) return;
+
+    const cnt = await api('/api/feedback/admin/pendingCount');
+    const badge = document.getElementById('pendingBadge');
+    if (cnt > 0) { badge.textContent = cnt; badge.style.display = 'inline'; } else badge.style.display = 'none';
+
+    const wrap = document.getElementById('listWrap');
+    if (!data.records || data.records.length === 0) {
+        wrap.innerHTML = '<div class="empty-state"><p>暂无反馈记录</p></div>'; return;
+    }
+    let html = '';
+    data.records.forEach(fb => {
+        html += `<div class="fb-card">
+            <div class="fb-card-header">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span class="cat-tag cat-${fb.category}">${catLabel(fb.category)}</span>
+                    <span style="font-weight:600;font-size:14px">${fb.title}</span>
+                </div>
+                <span class="status-${fb.status}">${statusLabel(fb.status)}</span>
+            </div>
+            <div class="fb-meta">
+                <i class="fas fa-user"></i> ${fb.username || '匿名用户'}
+                ${fb.contact ? ` &nbsp;·&nbsp; <i class="fas fa-phone"></i> ${fb.contact}` : ''}
+                &nbsp;·&nbsp; <i class="fas fa-clock"></i> ${fmtDate(fb.createTime)}
+            </div>
+            <div class="fb-content">${fb.content}</div>
+            ${fb.reply ? `<div class="fb-reply"><b>管理员回复：</b>${fb.reply}
+                <span style="float:right;font-size:11px;color:#999">${fmtDate(fb.replyTime)}</span></div>` : ''}
+            <div class="fb-actions">
+                ${fb.status !== 'RESOLVED' ? `<button class="btn btn-primary btn-sm" onclick="openReply(${fb.id})"><i class="fas fa-reply"></i> 回复</button>` : ''}
+                <button class="btn btn-danger btn-sm" onclick="delFb(${fb.id})"><i class="fas fa-trash"></i> 删除</button>
+            </div>
+        </div>`;
+    });
+    wrap.innerHTML = html;
+    buildPagination(data.total, data.size, data.current);
+}
+
+function catLabel(c) { return {BUG:'Bug报告',SUGGESTION:'功能建议',COMPLAINT:'投诉',GENERAL:'一般反馈'}[c] || c; }
+function statusLabel(s) { return {PENDING:'待处理',PROCESSING:'处理中',RESOLVED:'已解决'}[s] || s; }
+function fmtDate(d) {
+    if (!d) return '--';
+    return new Date(d).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+function openReply(id) { document.getElementById('replyId').value=id; document.getElementById('replyText').value=''; document.getElementById('replyModal').style.display='flex'; }
+function closeReply() { document.getElementById('replyModal').style.display='none'; }
+async function doReply() {
+    const id = document.getElementById('replyId').value;
+    const reply = document.getElementById('replyText').value.trim();
+    const status = document.getElementById('replyStatus').value;
+    if (!reply) { showToast('请输入回复内容','error'); return; }
+    const res = await api(`/api/feedback/admin/reply?id=${id}&reply=${encodeURIComponent(reply)}&status=${status}`);
+    if (res) { closeReply(); showToast('回复成功'); load(); }
+}
+async function delFb(id) {
+    showConfirm('确定删除该反馈？', async () => {
+        const res = await api(`/api/feedback/admin/delete?id=${id}`);
+        if (res) { showToast('已删除'); load(); }
+    });
+}
+function buildPagination(total, size, current) {
+    const pages = Math.ceil(total / size);
+    if (pages <= 1) { document.getElementById('pagination').innerHTML=''; return; }
+    let html = '';
+    for (let i=1;i<=pages;i++) html+=`<button class="page-btn${i===current?' active':''}" onclick="gotoPage(${i})">${i}</button>`;
+    document.getElementById('pagination').innerHTML = html;
+}
+function gotoPage(p) { currentPage=p; load(); }
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文化详情 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .action-bar{display:flex;gap:16px;align-items:center;margin-top:32px;padding-top:24px;border-top:1px solid var(--border)}
+        .action-btn{display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--r);border:1px solid var(--border);background:#fff;cursor:pointer;font-size:14px;transition:all .2s;color:var(--text)}
+        .action-btn:hover{border-color:var(--red);color:var(--red)}
+        .action-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+        .action-btn .count{font-weight:600}
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture" class="active">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="detail-header">
+    <div class="container">
+        <h1 id="cultureTitle">加载中...</h1>
+        <div class="meta">
+            <span id="cultureAuthor" class="meta-item"><i class="fas fa-user"></i> --</span>
+            <span id="cultureTime" class="meta-item"><i class="fas fa-clock"></i> --</span>
+            <span id="cultureViews" class="meta-item views-badge"><i class="fas fa-eye"></i> --</span>
+        </div>
+    </div>
+</div>
+
+<div class="section" style="padding-top:0">
+    <div class="container">
+        <div class="detail-content">
+            <div class="detail-main">
+                <div id="cultureContent" class="culture-text">
+                    <div class="loading"><div class="spinner"></div><p>加载中...</p></div>
+                </div>
+
+                <div class="action-bar">
+                    <button id="likeBtn" class="action-btn" onclick="toggleLike()">
+                        <i class="far fa-thumbs-up"></i>
+                        <span>点赞</span>
+                        <span class="count" id="likeCount">0</span>
+                    </button>
+                    <button id="favBtn" class="action-btn" onclick="toggleFavorite()">
+                        <i class="far fa-heart"></i>
+                        <span>收藏</span>
+                    </button>
+                    <button class="action-btn" onclick="sharePage()">
+                        <i class="fas fa-share-alt"></i>
+                        <span>分享</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="detail-sidebar">
+                <div class="sidebar-card">
+                    <h3>文章信息</h3>
+                    <table class="info-table">
+                        <tr><td>作者</td><td id="infoAuthor">--</td></tr>
+                        <tr><td>发布时间</td><td id="infoTime">--</td></tr>
+                        <tr><td>浏览量</td><td id="infoViews">--</td></tr>
+                        <tr><td>分类</td><td id="infoCategory">--</td></tr>
+                    </table>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>推荐阅读</h3>
+                    <div id="relatedList"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+const cultureId = getParam('id');
+let isLiked = false;
+let isFavorited = false;
+
+if (!cultureId) { location.href = 'culture.html'; }
+
+let cultureData = null;
+
+function renderCultureContent() {
+    if (!cultureData) return;
+    const title = getLang(cultureData, 'title') || cultureData.title;
+    const content = getLang(cultureData, 'content') || cultureData.content || '';
+    document.title = title + ' - 贵州红色旅游';
+    document.getElementById('cultureTitle').textContent = title;
+    document.getElementById('cultureContent').innerHTML = content.includes('<') ? content : content.split('\n').map(p => `<p>${p}</p>`).join('');
+}
+
+async function loadDetail() {
+    cultureData = await api(`/api/culture/detail?id=${cultureId}`);
+    if (!cultureData) { document.getElementById('cultureTitle').textContent = '内容不存在'; return; }
+
+    document.getElementById('cultureAuthor').innerHTML = `<i class="fas fa-user"></i> ${cultureData.author || '佚名'}`;
+    document.getElementById('cultureTime').innerHTML = `<i class="fas fa-clock"></i> ${formatDate(cultureData.createTime)}`;
+    document.getElementById('cultureViews').innerHTML = `<i class="fas fa-eye"></i> ${cultureData.viewCount || 0}`;
+
+    document.getElementById('infoAuthor').textContent = cultureData.author || '佚名';
+    document.getElementById('infoTime').textContent = formatDate(cultureData.createTime);
+    document.getElementById('infoViews').textContent = cultureData.viewCount || 0;
+    document.getElementById('infoCategory').textContent = cultureData.categoryName || cultureData.category || '--';
+
+    renderCultureContent();
+}
+
+document.addEventListener('langchange', () => { renderCultureContent(); });
+
+async function loadLikeCount() {
+    const res = await api(`/api/like/count?targetType=CULTURE&targetId=${cultureId}`);
+    if (res !== null) {
+        document.getElementById('likeCount').textContent = res;
+    }
+}
+
+async function checkLike() {
+    const user = getUser();
+    if (!user) return;
+    const res = await api(`/api/like/check?targetType=CULTURE&targetId=${cultureId}`);
+    if (res) {
+        isLiked = true;
+        updateLikeBtn();
+    }
+}
+
+function updateLikeBtn() {
+    const btn = document.getElementById('likeBtn');
+    if (isLiked) {
+        btn.classList.add('active');
+        btn.querySelector('i').className = 'fas fa-thumbs-up';
+        btn.querySelector('span:not(.count)').textContent = '已赞';
+    } else {
+        btn.classList.remove('active');
+        btn.querySelector('i').className = 'far fa-thumbs-up';
+        btn.querySelector('span:not(.count)').textContent = '点赞';
+    }
+}
+
+async function toggleLike() {
+    if (!requireLogin()) return;
+    if (isLiked) {
+        var res = await api(`/api/like/remove?targetType=CULTURE&targetId=${cultureId}`);
+        if (res === null) return;
+        isLiked = false;
+        showToast('已取消点赞');
+    } else {
+        var res = await api(`/api/like/add?targetType=CULTURE&targetId=${cultureId}`);
+        if (res === null) return;
+        isLiked = true;
+        showToast('已点赞');
+    }
+    updateLikeBtn();
+    loadLikeCount();
+}
+
+async function checkFavorite() {
+    const user = getUser();
+    if (!user) return;
+    const res = await api(`/api/favorite/check?targetType=CULTURE&targetId=${cultureId}`);
+    if (res) {
+        isFavorited = true;
+        updateFavBtn();
+    }
+}
+
+function updateFavBtn() {
+    const btn = document.getElementById('favBtn');
+    if (isFavorited) {
+        btn.classList.add('active');
+        btn.querySelector('i').className = 'fas fa-heart';
+        btn.querySelector('span').textContent = '已收藏';
+    } else {
+        btn.classList.remove('active');
+        btn.querySelector('i').className = 'far fa-heart';
+        btn.querySelector('span').textContent = '收藏';
+    }
+}
+
+async function toggleFavorite() {
+    if (!requireLogin()) return;
+    if (isFavorited) {
+        var res = await api(`/api/favorite/remove?targetType=CULTURE&targetId=${cultureId}`);
+        if (res === null) return;
+        isFavorited = false;
+        showToast('已取消收藏');
+    } else {
+        var res = await api(`/api/favorite/add?targetType=CULTURE&targetId=${cultureId}`);
+        if (res === null) return;
+        isFavorited = true;
+        showToast('已收藏');
+    }
+    updateFavBtn();
+}
+
+function sharePage() {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(location.href);
+        showToast('链接已复制到剪贴板');
+    } else {
+        showToast('请手动复制网址分享', 'warn');
+    }
+}
+
+async function loadRelated() {
+    const res = await api(`/api/culture/list?page=1&size=5&categoryId=`);
+    const container = document.getElementById('relatedList');
+    if (!res) { container.innerHTML = '<div class="empty"><p>暂无推荐</p></div>'; return; }
+
+    const list = (res.records || res.list || res).filter(c => c.id != cultureId).slice(0, 5);
+    if (list.length === 0) { container.innerHTML = '<div class="empty"><p>暂无推荐</p></div>'; return; }
+
+    container.innerHTML = list.map(c => `
+        <a href="culture-detail.html?id=${c.id}" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5;align-items:center;color:var(--text)">
+            <div style="width:50px;height:50px;border-radius:6px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--red),var(--red-dark))">
+                ${c.coverImage ? `<img src="${API + c.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="imgError(this)">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)"><i class="fas fa-book-open"></i></div>'}
+            </div>
+            <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.title}</div>
+                <div style="font-size:12px;color:var(--text3);margin-top:4px"><i class="fas fa-eye"></i> ${c.viewCount || 0}</div>
+            </div>
+        </a>
+    `).join('');
+}
+
+loadDetail();
+loadLikeCount();
+checkLike();
+checkFavorite();
+loadRelated();
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红色文化 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .culture-layout{display:grid;grid-template-columns:220px 1fr;gap:24px}
+        .category-sidebar{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);height:fit-content;position:sticky;top:80px}
+        .category-sidebar h3{font-size:16px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--red)}
+        .category-list{list-style:none}
+        .category-list li{margin-bottom:2px}
+        .category-list li a{display:block;padding:10px 14px;border-radius:6px;color:var(--text);font-size:14px;transition:all .2s;cursor:pointer}
+        .category-list li a:hover,.category-list li a.active{background:rgba(196,26,26,.08);color:var(--red);font-weight:600}
+        @media(max-width:768px){.culture-layout{grid-template-columns:1fr}.category-sidebar{position:static}}
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture" class="active">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="section">
+    <div class="container">
+        <div class="filter-bar" style="margin-bottom:24px">
+            <div class="search-box" style="flex:1">
+                <input type="text" id="filterKeyword" placeholder="搜索红色文化内容..." data-i18n-placeholder="search">
+                <button class="btn btn-primary" onclick="loadCultures(1)"><i class="fas fa-search"></i> 搜索</button>
+            </div>
+        </div>
+
+        <div class="culture-layout">
+            <div class="category-sidebar">
+                <h3><i class="fas fa-list" style="margin-right:6px"></i>文化分类</h3>
+                <ul id="categoryList" class="category-list">
+                    <li><a class="active" onclick="selectCategory('', this)">全部分类</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <div id="cultureGrid" class="card-grid">
+                    <div class="loading"><div class="spinner"></div><p>加载中...</p></div>
+                </div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+let currentPage = 1;
+let selectedCategoryId = '';
+
+async function loadCategories() {
+    const cats = await api('/api/culture/categories');
+    const list = document.getElementById('categoryList');
+    if (!cats) return;
+    cats.forEach(c => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a onclick="selectCategory('${c.id}', this)">${c.name || c.categoryName}</a>`;
+        list.appendChild(li);
+    });
+}
+
+function selectCategory(catId, el) {
+    selectedCategoryId = catId;
+    document.querySelectorAll('.category-list a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    loadCultures(1);
+}
+
+async function loadCultures(page) {
+    currentPage = page;
+    const keyword = document.getElementById('filterKeyword').value;
+
+    const grid = document.getElementById('cultureGrid');
+    grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+
+    const res = await api(`/api/culture/list?page=${page}&size=9&categoryId=${encodeURIComponent(selectedCategoryId)}&keyword=${encodeURIComponent(keyword)}`);
+    if (!res) { grid.innerHTML = '<div class="empty"><i class="fas fa-book-open"></i><p>加载失败，请重试</p></div>'; return; }
+
+    const list = res.records || res.list || res;
+    const total = res.total || (Array.isArray(res) ? res.length : 0);
+
+    if (!list || list.length === 0) {
+        grid.innerHTML = '<div class="empty"><i class="fas fa-book-open"></i><p>暂无文化内容</p></div>';
+        document.getElementById('pagination').innerHTML = '';
+        return;
+    }
+
+    grid.innerHTML = list.map(c => `
+        <div class="card" onclick="location.href='culture-detail.html?id=${c.id}'">
+            <div class="card-img">
+                ${c.coverImage ? `<img src="${API + c.coverImage}" alt="${c.title}" onerror="imgError(this)">` : ''}
+                <div class="placeholder-icon"><i class="fas fa-book-open"></i></div>
+            </div>
+            <div class="card-body">
+                <h3>${c.title || ''}</h3>
+                <div class="card-meta">
+                    <span><i class="fas fa-user"></i> ${c.author || '佚名'}</span>
+                    <span><i class="fas fa-eye"></i> ${c.viewCount || 0}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    renderPagination(document.getElementById('pagination'), currentPage, total, 9, 'loadCultures');
+}
+
+document.getElementById('filterKeyword').addEventListener('keyup', e => { if (e.key === 'Enter') loadCultures(1); });
+
+loadCategories();
+loadCultures(1);
+</script>
+</body>
+</html>

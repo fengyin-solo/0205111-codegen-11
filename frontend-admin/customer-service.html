@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 人工客服</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        .chat-layout{display:flex;gap:0;height:calc(100vh - 140px);background:#fff;border-radius:8px;border:1px solid #e8e8e8;overflow:hidden}
+        .chat-sessions{width:30%;border-right:1px solid #e8e8e8;display:flex;flex-direction:column;min-width:0}
+        .chat-sessions-header{padding:16px;flex-shrink:0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:15px}
+        .chat-sessions-list{flex:1;overflow-y:auto;padding:8px 0}
+        .session-item{padding:16px;cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background .2s;display:flex;flex-direction:column;gap:4px}
+        .session-item:hover,.session-item.active{background:#fafafa}
+        .session-item.active{background:rgba(196,26,26,.06);border-left:3px solid #C41A1A;margin-left:0;padding-left:13px}
+        .session-username{font-weight:600;font-size:14px;color:#333}
+        .session-preview{font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .chat-panel{flex:1;display:flex;flex-direction:column;min-width:0}
+        .chat-panel-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#999;font-size:14px;flex-direction:column;gap:12px}
+        .chat-panel-empty i{font-size:48px;opacity:.5}
+        .chat-messages{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+        .chat-msg{display:flex;gap:10px;max-width:85%}
+        .chat-msg.user{align-self:flex-start;flex-direction:row}
+        .chat-msg.admin{align-self:flex-end;flex-direction:row-reverse}
+        .chat-msg .chat-bubble{padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5}
+        .chat-msg.user .chat-bubble{background:#e6f7ff;color:#1890ff;border-bottom-left-radius:4px}
+        .chat-msg.admin .chat-bubble{background:#f6ffed;color:#52c41a;border-bottom-right-radius:4px}
+        .chat-msg .chat-bubble{display:flex;flex-direction:column;align-items:flex-start}
+.chat-msg .chat-time{font-size:11px;color:inherit;opacity:.7;margin-top:4px}
+        .chat-input-wrap{display:flex;gap:8px;padding:16px;border-top:1px solid #e8e8e8;flex-shrink:0}
+        .chat-input-wrap input{flex:1;padding:10px 16px;border:1px solid #d9d9d9;border-radius:6px;font-size:14px;outline:none}
+        .chat-input-wrap input:focus{border-color:#C41A1A}
+        .chat-input-wrap button{padding:10px 20px}
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><i class="fas fa-flag"></i> 管理后台</div>
+        <nav class="sidebar-nav">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> 仪表盘</a>
+            <a href="users.html"><i class="fas fa-users"></i> 用户管理</a>
+            <a href="spots.html"><i class="fas fa-map-marker-alt"></i> 景点管理</a>
+            <a href="routes.html"><i class="fas fa-route"></i> 线路管理</a>
+            <a href="culture.html"><i class="fas fa-book"></i> 文化管理</a>
+            <a href="hotels.html"><i class="fas fa-hotel"></i> 酒店管理</a>
+            <a href="foods.html"><i class="fas fa-utensils"></i> 美食管理</a>
+            <a href="comments.html"><i class="fas fa-comments"></i> 留言管理</a>
+            <a href="orders.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
+            <a href="faqs.html"><i class="fas fa-question-circle"></i> FAQ管理</a>
+            <div style="border-top:1px solid rgba(255,255,255,.12);margin:8px 12px"></div>
+            <a href="feedbacks.html"><i class="fas fa-bullhorn"></i> 问题反馈</a>
+            <a href="route-review.html"><i class="fas fa-clipboard-check"></i> 线路审核</a>
+            <a href="spot-review.html"><i class="fas fa-search-plus"></i> 景点审核</a>
+            <a href="permissions.html"><i class="fas fa-shield-alt"></i> 权限配置</a>
+            <a href="customer-service.html" class="active"><i class="fas fa-headset"></i> 人工客服</a>
+        </nav>
+    </aside>
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1>人工客服</h1>
+            <div class="top-bar-right"><span id="adminName"></span> <a href="#" onclick="doLogout()">退出</a></div>
+        </header>
+        <div class="content">
+            <div class="chat-layout">
+                <div class="chat-sessions">
+                    <div class="chat-sessions-header"><i class="fas fa-comments"></i> 会话列表</div>
+                    <div class="chat-sessions-list" id="sessionList">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>
+                    </div>
+                </div>
+                <div class="chat-panel">
+                    <div class="chat-panel-empty" id="chatEmpty">
+                        <i class="fas fa-headset"></i>
+                        <p>请从左侧选择会话开始沟通</p>
+                    </div>
+                    <div class="chat-messages" id="chatMessages" style="display:none"></div>
+                    <div class="chat-input-wrap" id="chatInputWrap" style="display:none">
+                        <input type="text" id="chatInput" placeholder="输入回复内容..." onkeyup="if(event.key==='Enter')sendMessage()">
+                        <button class="btn btn-primary" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> 发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-common.js"></script>
+<script>
+if (!requireAdmin()) throw '';
+renderSidebar();
+
+let selectedUserId = null;
+
+async function loadSessions() {
+    const list = document.getElementById('sessionList');
+    const data = await api('/api/admin/chat/sessions');
+    if (!data) { list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> 加载失败</div>'; return; }
+    const arr = Array.isArray(data) ? data : (data.records || data.list || []);
+    if (!arr.length) { list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> 暂无会话</div>'; return; }
+    list.innerHTML = arr.map(s => {
+        const preview = (s.lastMessage || '').substring(0, 40);
+        const time = s.lastTime ? formatDate(s.lastTime) : '';
+        return `<div class="session-item" data-user-id="${s.userId}" onclick="selectSession(${s.userId})">
+            <span class="session-username">${escHtml(s.username || '用户' + s.userId)}</span>
+            <span class="session-preview">${escHtml(preview || '无消息')} ${time ? '· ' + time : ''}</span>
+        </div>`;
+    }).join('');
+}
+
+function selectSession(userId) {
+    selectedUserId = userId;
+    document.querySelectorAll('.session-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.userId == userId);
+    });
+    document.getElementById('chatEmpty').style.display = 'none';
+    document.getElementById('chatMessages').style.display = 'flex';
+    document.getElementById('chatInputWrap').style.display = 'flex';
+    document.getElementById('chatMessages').innerHTML = '';
+    loadHistory(userId);
+}
+
+async function loadHistory(userId) {
+    const data = await api('/api/admin/chat/history?userId=' + userId);
+    const wrap = document.getElementById('chatMessages');
+    if (!data) return;
+    const list = Array.isArray(data) ? data : (data.records || data.list || []);
+    wrap.innerHTML = list.map(m => {
+        const isUser = m.sender === 'USER';
+        return `<div class="chat-msg ${isUser ? 'user' : 'admin'}">
+            <div class="chat-bubble">${escHtml(m.content || '')}<div class="chat-time">${formatDate(m.createTime)}</div></div>
+        </div>`;
+    }).join('');
+    wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const content = input.value.trim();
+    if (!content || !selectedUserId) return;
+    const res = await api('/api/admin/chat/send?userId=' + selectedUserId + '&content=' + encodeURIComponent(content));
+    if (res !== null) {
+        input.value = '';
+        const wrap = document.getElementById('chatMessages');
+        wrap.innerHTML += `<div class="chat-msg admin">
+            <div class="chat-bubble">${escHtml(content)}<div class="chat-time">${formatDate(new Date())}</div></div>
+        </div>`;
+        wrap.scrollTop = wrap.scrollHeight;
+        loadSessions();
+    }
+}
+
+loadSessions();
+</script>
+</body>
+</html>

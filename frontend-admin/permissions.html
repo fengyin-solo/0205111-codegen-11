@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 权限配置</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><i class="fas fa-flag"></i> 管理后台</div>
+        <nav class="sidebar-nav">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> 仪表盘</a>
+            <a href="users.html"><i class="fas fa-users"></i> 用户管理</a>
+            <a href="spots.html"><i class="fas fa-map-marker-alt"></i> 景点管理</a>
+            <a href="routes.html"><i class="fas fa-route"></i> 线路管理</a>
+            <a href="culture.html"><i class="fas fa-book"></i> 文化管理</a>
+            <a href="hotels.html"><i class="fas fa-hotel"></i> 酒店管理</a>
+            <a href="foods.html"><i class="fas fa-utensils"></i> 美食管理</a>
+            <a href="comments.html"><i class="fas fa-comments"></i> 留言管理</a>
+            <a href="orders.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
+            <a href="faqs.html"><i class="fas fa-question-circle"></i> FAQ管理</a>
+            <div style="border-top:1px solid rgba(255,255,255,.12);margin:8px 12px"></div>
+            <a href="feedbacks.html"><i class="fas fa-bullhorn"></i> 问题反馈</a>
+            <a href="route-review.html"><i class="fas fa-clipboard-check"></i> 线路审核</a>
+            <a href="spot-review.html"><i class="fas fa-search-plus"></i> 景点审核</a>
+            <a href="permissions.html" class="active"><i class="fas fa-shield-alt"></i> 权限配置</a>
+            <a href="customer-service.html"><i class="fas fa-headset"></i> 人工客服</a>
+        </nav>
+    </aside>
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1>权限配置</h1>
+            <div class="top-bar-right"><span id="adminName"></span> <a href="#" onclick="doLogout()">退出</a></div>
+        </header>
+        <div class="content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>角色管理</h2>
+                    <button class="btn btn-primary" onclick="openRoleModal()"><i class="fas fa-plus"></i> 新增角色</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>ID</th><th>Code</th><th>名称</th><th>描述</th><th>操作</th></tr></thead>
+                        <tbody id="roleTableBody"><tr><td colspan="5" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>菜单权限配置</h2>
+                </div>
+                <div class="filter-bar">
+                    <label>选择角色：</label>
+                    <select class="form-control" id="roleSelect" style="width:200px" onchange="loadMenus()">
+                        <option value="">-- 请选择角色 --</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openMenuModal()" id="btnAddMenu" disabled><i class="fas fa-plus"></i> 添加菜单权限</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>menuKey</th><th>menuName</th><th>启用</th><th>操作</th></tr></thead>
+                        <tbody id="menuTableBody"><tr><td colspan="4" class="empty-state">请先选择角色</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="roleModal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="roleModalTitle">新增角色</h3><button class="modal-close" onclick="closeRoleModal()">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="roleId">
+            <div class="form-group"><label>Code</label><input class="form-control" id="roleCode" placeholder="如 ADMIN"></div>
+            <div class="form-group"><label>名称</label><input class="form-control" id="roleName" placeholder="角色名称"></div>
+            <div class="form-group"><label>描述</label><input class="form-control" id="roleDesc" placeholder="角色描述"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeRoleModal()">取消</button>
+            <button class="btn btn-primary" onclick="submitRole()">保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="menuModal">
+    <div class="modal">
+        <div class="modal-header"><h3>添加菜单权限</h3><button class="modal-close" onclick="closeMenuModal()">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>menuKey</label><input class="form-control" id="menuKey" placeholder="菜单标识"></div>
+            <div class="form-group"><label>menuName</label><input class="form-control" id="menuName" placeholder="菜单名称"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeMenuModal()">取消</button>
+            <button class="btn btn-primary" onclick="submitMenu()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-common.js"></script>
+<script>
+if (!requireAdmin()) throw '';
+renderSidebar();
+
+async function loadRoles() {
+    const data = await api('/api/admin/role/list');
+    const tbody = document.getElementById('roleTableBody');
+    const sel = document.getElementById('roleSelect');
+    if (!data) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">加载失败</td></tr>'; return; }
+    const list = Array.isArray(data) ? data : (data.records || data.list || []);
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i> 暂无角色</td></tr>'; sel.innerHTML = '<option value="">-- 请选择角色 --</option>'; return; }
+    let h = '';
+    list.forEach(r => {
+        h += `<tr>
+            <td>${r.id}</td>
+            <td>${escHtml(r.code)}</td>
+            <td>${escHtml(r.name)}</td>
+            <td>${escHtml(r.description || '-')}</td>
+            <td class="action-btns">
+                <button class="btn btn-sm btn-primary" onclick="editRole(${r.id},'${escHtml(r.code||'')}','${escHtml(r.name||'')}','${escHtml(r.description||'')}')">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteRole(${r.id})">删除</button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = h;
+    sel.innerHTML = '<option value="">-- 请选择角色 --</option>' + list.map(r => `<option value="${escHtml(r.code)}">${escHtml(r.name)} (${escHtml(r.code)})</option>`).join('');
+}
+
+function openRoleModal(isEdit) {
+    document.getElementById('roleModalTitle').textContent = isEdit ? '编辑角色' : '新增角色';
+    if (!isEdit) {
+        document.getElementById('roleId').value = '';
+        document.getElementById('roleCode').value = '';
+        document.getElementById('roleName').value = '';
+        document.getElementById('roleDesc').value = '';
+        document.getElementById('roleCode').disabled = false;
+    }
+    document.getElementById('roleModal').classList.add('active');
+}
+function closeRoleModal() { document.getElementById('roleModal').classList.remove('active'); }
+
+function editRole(id, code, name, desc) {
+    document.getElementById('roleId').value = id;
+    document.getElementById('roleCode').value = code;
+    document.getElementById('roleName').value = name;
+    document.getElementById('roleDesc').value = desc || '';
+    document.getElementById('roleCode').disabled = true;
+    openRoleModal(true);
+}
+
+async function submitRole() {
+    const id = document.getElementById('roleId').value;
+    const code = document.getElementById('roleCode').value.trim();
+    const name = document.getElementById('roleName').value.trim();
+    const desc = document.getElementById('roleDesc').value.trim();
+    if (!code || !name) { showToast('请输入Code和名称', 'error'); return; }
+    let url = '/api/admin/role/save?code=' + encodeURIComponent(code) + '&name=' + encodeURIComponent(name);
+    if (id) url += '&id=' + id;
+    if (desc) url += '&description=' + encodeURIComponent(desc);
+    const res = await api(url);
+    if (res !== null) { showToast('保存成功'); closeRoleModal(); loadRoles(); }
+}
+
+function deleteRole(id) {
+    showConfirm('确定删除该角色吗？', async () => {
+        const res = await api('/api/admin/role/delete?id=' + id);
+        if (res !== null) { showToast('删除成功'); loadRoles(); loadMenus(); }
+    });
+}
+
+function openMenuModal() {
+    const roleCode = document.getElementById('roleSelect').value;
+    if (!roleCode) { showToast('请先选择角色', 'error'); return; }
+    document.getElementById('menuKey').value = '';
+    document.getElementById('menuName').value = '';
+    document.getElementById('menuModal').classList.add('active');
+}
+function closeMenuModal() { document.getElementById('menuModal').classList.remove('active'); }
+
+async function loadMenus() {
+    const roleCode = document.getElementById('roleSelect').value;
+    const tbody = document.getElementById('menuTableBody');
+    document.getElementById('btnAddMenu').disabled = !roleCode;
+    if (!roleCode) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">请先选择角色</td></tr>'; return; }
+    tbody.innerHTML = '<tr><td colspan="4" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    const data = await api('/api/admin/role/menu/list?roleCode=' + encodeURIComponent(roleCode));
+    if (!data) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">加载失败</td></tr>'; return; }
+    const list = Array.isArray(data) ? data : (data.records || data.list || []);
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><i class="fas fa-inbox"></i> 暂无菜单权限</td></tr>'; return; }
+    let h = '';
+    list.forEach(m => {
+        const enabled = (m.enabled === 1 || m.enabled === true);
+        h += `<tr>
+            <td>${escHtml(m.menuKey)}</td>
+            <td>${escHtml(m.menuName || '-')}</td>
+            <td><button class="btn btn-sm ${enabled ? 'btn-success' : 'btn-default'}" onclick="toggleMenu(${m.id})">${enabled ? '启用' : '禁用'}</button></td>
+            <td class="action-btns"><button class="btn btn-sm btn-danger" onclick="deleteMenu(${m.id})">删除</button></td>
+        </tr>`;
+    });
+    tbody.innerHTML = h;
+}
+
+async function submitMenu() {
+    const roleCode = document.getElementById('roleSelect').value;
+    const menuKey = document.getElementById('menuKey').value.trim();
+    const menuName = document.getElementById('menuName').value.trim();
+    if (!roleCode || !menuKey) { showToast('请选择角色并输入menuKey', 'error'); return; }
+    const url = '/api/admin/role/menu/save?roleCode=' + encodeURIComponent(roleCode) + '&menuKey=' + encodeURIComponent(menuKey) + (menuName ? '&menuName=' + encodeURIComponent(menuName) : '');
+    const res = await api(url);
+    if (res !== null) { showToast('保存成功'); closeMenuModal(); loadMenus(); }
+}
+
+async function toggleMenu(id) {
+    const res = await api('/api/admin/role/menu/toggle?id=' + id);
+    if (res !== null) { showToast('已切换'); loadMenus(); }
+}
+
+function deleteMenu(id) {
+    showConfirm('确定删除该菜单权限吗？', async () => {
+        const res = await api('/api/admin/role/menu/delete?id=' + id);
+        if (res !== null) { showToast('删除成功'); loadMenus(); }
+    });
+}
+
+loadRoles();
+</script>
+</body>
+</html>

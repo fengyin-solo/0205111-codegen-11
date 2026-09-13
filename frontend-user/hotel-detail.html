@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酒店详情 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>.pay-opt:has(input:checked){border-color:var(--red) !important;background:#fff5f5}</style>
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" class="active" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="detail-header">
+    <div class="container">
+        <h1 id="hotelName"></h1>
+        <div class="meta">
+            <span id="hotelLocation" class="meta-item"><i class="fas fa-map-marker-alt"></i></span>
+            <span id="hotelPrice" class="meta-item" style="font-weight:700;font-size:15px"></span>
+            <span id="hotelRating" class="meta-item rating-badge"></span>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="detail-content">
+        <div class="detail-main">
+            <h3 style="margin-bottom:16px">酒店介绍</h3>
+            <div class="culture-text" id="hotelDesc" style="margin-bottom:24px"></div>
+
+            <h3 style="margin-bottom:16px">酒店信息</h3>
+            <table class="info-table" id="infoTable"></table>
+            <div style="margin-top:24px">
+                <button class="btn btn-primary" onclick="openBookModal()" style="font-size:16px;padding:12px 32px"><i class="fas fa-calendar-check"></i> 立即预订</button>
+            </div>
+            <div style="margin-top:40px">
+                <h3 style="margin-bottom:16px">用户评价</h3>
+                <div class="comment-form" id="commentForm">
+                    <div class="rating-select" id="ratingSelect"></div>
+                    <textarea id="commentText" placeholder="写下你的评价..."></textarea>
+                    <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="submitComment()">提交评价</button>
+                </div>
+                <div id="commentList"></div>
+                <div class="pagination" id="commentPagination"></div>
+            </div>
+        </div>
+        <div class="detail-sidebar">
+            <div class="sidebar-card">
+                <h3>酒店封面</h3>
+                <img id="hotelCover" style="width:100%;border-radius:6px" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="bookModal">
+    <div class="modal" style="position:relative">
+        <span class="modal-close" onclick="closeBookModal()">&times;</span>
+        <h3>预订酒店</h3>
+        <div class="form-group">
+            <label>入住日期</label>
+            <input type="date" id="checkIn">
+        </div>
+        <div class="form-group">
+            <label>退房日期</label>
+            <input type="date" id="checkOut">
+        </div>
+        <div class="form-group">
+            <label>房间数量</label>
+            <input type="number" id="bookQty" value="1" min="1" max="10">
+        </div>
+        <div class="form-group">
+            <label>预计费用</label>
+            <div id="bookCost" style="font-size:20px;color:var(--red);font-weight:700">¥0</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="confirmBook()">确认预订</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="payModal">
+    <div class="modal" style="position:relative">
+        <span class="modal-close" onclick="closePayModal()">&times;</span>
+        <h3 style="margin-bottom:16px">确认支付</h3>
+        <div style="text-align:center;margin:20px 0">
+            <div style="font-size:32px;color:var(--red);font-weight:700" id="payAmount">¥0</div>
+            <div style="color:var(--text2);margin-top:4px">订单金额</div>
+        </div>
+        <div style="margin:24px 0">
+            <div style="display:flex;gap:12px;margin-bottom:12px">
+                <label class="pay-opt" style="flex:1;display:flex;align-items:center;gap:8px;padding:14px;border:2px solid var(--red);border-radius:var(--r);cursor:pointer;background:#fff5f5" onclick="selectPayMethod('WECHAT')">
+                    <input type="radio" name="payMethod" value="WECHAT" checked>
+                    <i class="fab fa-weixin" style="font-size:22px;color:#07c160"></i> 微信支付
+                </label>
+            </div>
+            <p style="font-size:13px;color:var(--text2);margin-bottom:8px">银行卡支付：</p>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_ICBC')">
+                    <input type="radio" name="payMethod" value="BANK_ICBC">
+                    <i class="fas fa-university" style="color:#C41A1A"></i> 工商银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_CCB')">
+                    <input type="radio" name="payMethod" value="BANK_CCB">
+                    <i class="fas fa-university" style="color:#003DA5"></i> 建设银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_ABC')">
+                    <input type="radio" name="payMethod" value="BANK_ABC">
+                    <i class="fas fa-university" style="color:#009944"></i> 农业银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_BOC')">
+                    <input type="radio" name="payMethod" value="BANK_BOC">
+                    <i class="fas fa-university" style="color:#C41A1A"></i> 中国银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_BOCOM')">
+                    <input type="radio" name="payMethod" value="BANK_BOCOM">
+                    <i class="fas fa-university" style="color:#003976"></i> 交通银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_CMB')">
+                    <input type="radio" name="payMethod" value="BANK_CMB">
+                    <i class="fas fa-university" style="color:#E60012"></i> 招商银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_PSBC')">
+                    <input type="radio" name="payMethod" value="BANK_PSBC">
+                    <i class="fas fa-university" style="color:#007236"></i> 邮储银行
+                </label>
+            </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="confirmPay()">确认支付（模拟）</button>
+        <div style="text-align:center;margin-top:12px"><a href="orders.html" style="color:var(--text2);font-size:13px">稍后支付 →</a></div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+const hotelId = getParam('id');
+let hotel = null, commentPage = 1, selectedRating = 5;
+
+async function loadDetail() {
+    hotel = await api('/api/hotel/detail?id=' + hotelId);
+    if (!hotel) { showToast('酒店不存在', 'error'); return; }
+    document.getElementById('hotelName').textContent = hotel.name || '';
+    document.getElementById('hotelLocation').innerHTML = '<i class="fas fa-map-marker-alt"></i> ' + (hotel.location || hotel.address || '');
+    document.getElementById('hotelPrice').innerHTML = '¥' + (hotel.price || 0) + '/晚';
+    document.getElementById('hotelRating').innerHTML = renderStars(hotel.rating || 0);
+    var coverEl = document.getElementById('hotelCover');
+    if (coverEl) {
+        coverEl.onerror = function(){ imgError(coverEl); };
+        coverEl.src = hotel.coverImage ? (API + hotel.coverImage) : '';
+    }
+    document.title = (hotel.name || '酒店详情') + ' - 贵州红色旅游';
+    document.getElementById('hotelDesc').innerHTML = '<p>' + (hotel.description || '暂无介绍') + '</p>';
+    document.getElementById('infoTable').innerHTML =
+        '<tr><td>位置</td><td><i class="fas fa-map-marker-alt" style="color:var(--red)"></i> ' + (hotel.location || hotel.address || '-') + '</td></tr>' +
+        '<tr><td>联系电话</td><td><i class="fas fa-phone" style="color:var(--red)"></i> ' + (hotel.phone || '-') + '</td></tr>' +
+        '<tr><td>含早餐</td><td>' + ((hotel.hasBreakfast || hotel.has_breakfast) ? '<span style="color:#07c160"><i class="fas fa-check-circle"></i> 含早餐</span>' : '<span style="color:#999"><i class="fas fa-times-circle"></i> 不含</span>') + '</td></tr>' +
+        '<tr><td>客房服务</td><td>' + ((hotel.hasRoomService || hotel.has_room_service) ? '<span style="color:#07c160"><i class="fas fa-check-circle"></i> 提供</span>' : '<span style="color:#999"><i class="fas fa-times-circle"></i> 不提供</span>') + '</td></tr>' +
+        '<tr><td>评分</td><td>' + renderStars(hotel.rating || 0) + ' <strong>' + (hotel.rating || 0) + '</strong> 分</td></tr>' +
+        '<tr><td>参考价格</td><td style="color:var(--red);font-weight:700;font-size:18px">¥' + (hotel.price || 0) + '<small style="font-size:12px;font-weight:400">/晚</small></td></tr>';
+    initRatingSelect();
+}
+
+function initRatingSelect() {
+    const el = document.getElementById('ratingSelect');
+    el.innerHTML = '<span>评分：</span>';
+    for (let i = 1; i <= 5; i++) {
+        el.innerHTML += '<i class="fas fa-star star ' + (i <= selectedRating ? 'active' : '') + '" onclick="setRating(' + i + ')"></i>';
+    }
+}
+
+function setRating(r) {
+    selectedRating = r;
+    document.querySelectorAll('#ratingSelect .star').forEach((s, i) => s.classList.toggle('active', i < r));
+}
+
+function openBookModal() {
+    if (!getUser()) { showToast('请先登录', 'error'); setTimeout(() => location.href = 'login.html', 1000); return; }
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('checkIn').value = today;
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    document.getElementById('checkOut').value = tomorrow;
+    document.getElementById('bookQty').value = 1;
+    calcCost();
+    document.getElementById('bookModal').classList.add('show');
+}
+
+function closeBookModal() { document.getElementById('bookModal').classList.remove('show'); }
+
+function calcCost() {
+    const cin = document.getElementById('checkIn').value;
+    const cout = document.getElementById('checkOut').value;
+    const qty = parseInt(document.getElementById('bookQty').value) || 1;
+    let nights = 1;
+    if (cin && cout) {
+        nights = Math.max(1, Math.round((new Date(cout) - new Date(cin)) / 86400000));
+    }
+    const cost = (hotel ? hotel.price : 0) * nights * qty;
+    document.getElementById('bookCost').textContent = '¥' + cost;
+    return cost;
+}
+
+document.getElementById('checkIn').addEventListener('change', calcCost);
+document.getElementById('checkOut').addEventListener('change', calcCost);
+document.getElementById('bookQty').addEventListener('input', calcCost);
+
+async function confirmBook() {
+    if (!getUser()) { showToast('请先登录', 'error'); setTimeout(() => location.href = 'login.html', 1000); return; }
+    const amount = calcCost();
+    const qty = parseInt(document.getElementById('bookQty').value) || 1;
+    const data = await api('/api/order/create?orderType=HOTEL&targetId=' + hotelId + '&targetName=' + encodeURIComponent(hotel.name) + '&amount=' + amount + '&quantity=' + qty);
+    if (data !== null) {
+        closeBookModal();
+        lastOrderId = data.id || data;
+        lastOrderAmount = amount;
+        document.getElementById('payAmount').textContent = '¥' + amount;
+        document.getElementById('payModal').classList.add('show');
+    }
+}
+
+let lastOrderId = null, lastOrderAmount = 0, payMethod = 'WECHAT';
+function selectPayMethod(m) { payMethod = m; document.querySelectorAll('.pay-opt').forEach(l => { var c = l.querySelector('input').value === m; l.style.borderColor = c ? 'var(--red)' : 'var(--border)'; l.style.background = c ? '#fff5f5' : ''; }); }
+function closePayModal() { document.getElementById('payModal').classList.remove('show'); }
+
+async function confirmPay() {
+    if (!lastOrderId) return;
+    const data = await api('/api/order/pay?orderId=' + lastOrderId + '&payMethod=' + payMethod);
+    if (data !== null) {
+        lastOrderId = null;
+        closePayModal();
+        showToast('支付成功！预订完成');
+        setTimeout(() => location.href = 'orders.html', 1200);
+    }
+}
+
+async function loadComments(page) {
+    commentPage = page;
+    const data = await api('/api/comment/list?targetType=HOTEL&targetId=' + hotelId + '&page=' + page + '&size=10');
+    const el = document.getElementById('commentList');
+    if (!data) { el.innerHTML = '<div class="empty"><i class="fas fa-comment-slash"></i><p>暂无评价</p></div>'; return; }
+    const list = data.records || data.list || data;
+    const total = data.total || list.length;
+    if (!list.length) { el.innerHTML = '<div class="empty"><i class="fas fa-comment-slash"></i><p>暂无评价</p></div>'; document.getElementById('commentPagination').innerHTML = ''; return; }
+    el.innerHTML = list.map(c =>
+        '<div class="comment-item">' +
+            '<div class="comment-avatar">' + (c.userAvatar ? ('<img src="' + API + c.userAvatar + '" alt="avatar">') : ((c.nickname || c.username || '?').charAt(0).toUpperCase())) + '</div>' +
+            '<div class="comment-body">' +
+                '<span class="name">' + (c.nickname || c.username || '匿名') + '</span>' +
+                '<span class="time">' + formatDate(c.createTime || c.createdAt) + '</span>' +
+                '<div class="rating">' + renderStars(c.rating || 0) + '</div>' +
+                '<div class="text">' + (c.content || '') + '</div>' +
+                (c.reply ? '<div class="comment-reply"><strong>商家回复：</strong>' + c.reply + '</div>' : '') +
+            '</div>' +
+        '</div>'
+    ).join('');
+    renderPagination(document.getElementById('commentPagination'), commentPage, total, 10, 'loadComments');
+}
+
+async function submitComment() {
+    if (!getUser()) { showToast('请先登录', 'error'); return; }
+    const content = document.getElementById('commentText').value.trim();
+    if (!content) { showToast('请输入评价内容', 'warn'); return; }
+    const data = await api('/api/comment/add?targetType=HOTEL&targetId=' + hotelId + '&content=' + encodeURIComponent(content) + '&rating=' + selectedRating);
+    if (data !== null) {
+        showToast('评价成功');
+        document.getElementById('commentText').value = '';
+        loadComments(1);
+    }
+}
+
+loadDetail();
+loadComments(1);
+</script>
+</body>
+</html>

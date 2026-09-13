@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的线路 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .route-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:16px}
+        .route-card{background:#fff;border-radius:12px;border:1px solid #e8e8e8;overflow:hidden;transition:box-shadow .2s}
+        .route-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.1)}
+        .route-card-body{padding:18px}
+        .route-card-title{font-weight:700;font-size:16px;margin-bottom:6px;color:#222}
+        .route-card-meta{font-size:12px;color:#888;margin-bottom:10px;display:flex;gap:12px}
+        .route-card-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:12px;max-height:48px;overflow:hidden}
+        .route-card-actions{display:flex;gap:8px}
+        .spot-tag{display:inline-block;background:#fff0f0;color:#c41a1a;padding:3px 8px;border-radius:6px;font-size:12px;margin:2px}
+        .new-card{border:2px dashed #e0e0e0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:160px;border-radius:12px;transition:all .2s;background:#fafafa}
+        .new-card:hover{border-color:#c41a1a;background:#fff0f0}
+        .new-card i{font-size:28px;color:#ddd;margin-bottom:10px}
+        .new-card:hover i{color:#c41a1a}
+        .new-card span{font-size:13px;color:#aaa}
+        .new-card:hover span{color:#c41a1a}
+        .modal-wide{max-width:640px;width:90vw;max-height:90vh;overflow-y:auto}
+        .spot-picker{max-height:260px;overflow-y:auto;border:1px solid #e8e8e8;border-radius:8px}
+        .sp-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f5f5f5;font-size:13px;cursor:pointer;transition:background .1s}
+        .sp-row:last-child{border-bottom:none}
+        .sp-row:hover{background:#fff0f0}
+        .sp-row.selected{background:#fff0f0}
+        .selected-spots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:32px;padding:6px 10px;border:1px solid #f0f0f0;border-radius:8px;background:#fafafa}
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html">首页</a>
+            <a href="spots.html">景点</a>
+            <a href="routes.html">线路</a>
+            <a href="culture.html">红色文化</a>
+            <a href="hotels.html">酒店</a>
+            <a href="foods.html">美食</a>
+            <a href="faq.html">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="profile-layout">
+        <div class="profile-sidebar">
+            <div class="profile-sidebar-header">
+                <div class="profile-avatar" id="sidebarAvatar"></div>
+                <h3 id="sidebarName"></h3>
+                <p id="sidebarPhone"></p>
+            </div>
+            <div class="profile-menu">
+                <a href="profile.html"><i class="fas fa-user"></i><span>个人中心</span></a>
+                <a href="favorites.html"><i class="fas fa-heart"></i><span>我的收藏</span></a>
+                <a href="orders.html"><i class="fas fa-shopping-bag"></i><span>我的订单</span></a>
+                <a href="messages.html"><i class="fas fa-bell"></i><span>消息通知</span></a>
+                <a href="my-routes.html" class="active"><i class="fas fa-route"></i><span>我的线路</span></a>
+                <a href="feedback.html"><i class="fas fa-bullhorn"></i><span>问题反馈</span></a>
+            </div>
+        </div>
+        <div class="profile-content">
+            <div class="profile-section-header">
+                <span class="profile-section-header-title"><i class="fas fa-route"></i> 我的自定义线路</span>
+                <button class="btn btn-primary profile-header-action" onclick="openEditor(null)">
+                    <i class="fas fa-plus"></i> 新建线路
+                </button>
+            </div>
+            <div id="routeWrap">
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑弹窗 -->
+<div class="modal-overlay" id="editorModal">
+    <div class="modal modal-wide">
+        <span class="modal-close" onclick="closeEditor()">&times;</span>
+        <h3 id="editorTitle" style="margin-bottom:16px">新建自定义线路</h3>
+        <input type="hidden" id="editorId">
+        <div class="form-group" style="margin-bottom:14px">
+            <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">线路名称 <span style="color:#ff4d4f">*</span></label>
+            <input type="text" id="eName" class="form-control" placeholder="如：遵义红色两日游">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+            <div class="form-group">
+                <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">游览天数</label>
+                <input type="number" id="eDays" class="form-control" value="1" min="1" max="30">
+            </div>
+            <div class="form-group">
+                <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">简介</label>
+                <input type="text" id="eDesc" class="form-control" placeholder="可选">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">选择景点</label>
+            <input type="text" id="spotKw" placeholder="搜索景点…" class="form-control" style="margin-bottom:8px" oninput="filterSpots()">
+            <div class="spot-picker" id="spotPicker"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:18px">
+            <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">已选景点</label>
+            <div class="selected-spots" id="selectedSpotsBox"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn-default" style="padding:8px 18px;border-radius:8px;border:1px solid #e0e0e0;cursor:pointer;font-size:13px" onclick="closeEditor()">取消</button>
+            <button class="btn-primary" style="padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px" onclick="saveRoute()"><i class="fas fa-save"></i> 保存</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+requireLogin();
+renderHeader();
+loadSidebar();
+
+let allSpots = [], selectedSpots = [];
+
+async function loadRoutes() {
+    const data = await api('/api/customRoute/list');
+    const wrap = document.getElementById('routeWrap');
+    if (!data || !data.length) {
+        wrap.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#aaa">
+            <i class="fas fa-route" style="font-size:36px;display:block;margin-bottom:12px;color:#e0e0e0"></i>
+            还没有自定义线路，快来创建第一条专属旅程吧！
+        </div>`; return;
+    }
+    wrap.innerHTML = `<div class="route-cards">${data.map(r => {
+        const spots = safeJson(r.spotData, []);
+        return `<div class="route-card">
+            <div style="background:linear-gradient(135deg,#c41a1a,#8b0000);height:5px"></div>
+            <div class="route-card-body">
+                <div class="route-card-title">${r.name}</div>
+                <div class="route-card-meta">
+                    <span><i class="fas fa-calendar-day"></i> ${r.days}天</span>
+                    <span><i class="fas fa-map-marker-alt"></i> ${spots.length}个景点</span>
+                    <span><i class="fas fa-clock"></i> ${fmtDate(r.createTime)}</span>
+                </div>
+                ${r.description ? `<div class="route-card-desc">${r.description}</div>` : ''}
+                <div style="margin-bottom:12px">${spots.slice(0,5).map(s=>`<span class="spot-tag">${s.spotName||s.name||'景点'}</span>`).join('')}
+                ${spots.length>5?`<span class="spot-tag" style="background:#f5f5f5;color:#aaa">+${spots.length-5}</span>`:''}</div>
+                ${r.status && r.status !== 'DRAFT' ? `<div style="margin-bottom:8px;font-size:12px"><span style="padding:2px 10px;border-radius:10px;font-weight:600;${r.status==='SUBMITTED'?'background:#fff7e6;color:#d48806':r.status==='APPROVED'?'background:#f6ffed;color:#52c41a':'background:#fff1f0;color:#ff4d4f'}">${{SUBMITTED:'待审核',APPROVED:'已推荐',REJECTED:'已驳回',DRAFT:'草稿'}[r.status]||r.status}</span>${r.rejectReason?` <span style="color:#ff4d4f;font-size:11px">原因：${r.rejectReason}</span>`:''}</div>` : ''}
+                <div class="route-card-actions">
+                    <button class="btn-primary" style="flex:1;padding:7px;border-radius:7px;border:none;cursor:pointer;font-size:13px" onclick="openEditor(${r.id})">
+                        <i class="fas fa-edit"></i> 编辑
+                    </button>
+                    ${!r.status || r.status === 'DRAFT' || r.status === 'REJECTED' ? `<button style="flex:1;padding:7px;border-radius:7px;border:1px solid #c41a1a;background:#fff;color:#c41a1a;cursor:pointer;font-size:13px" onclick="submitForReview(${r.id})"><i class="fas fa-paper-plane"></i> 申请推荐</button>` : ''}
+                    <button style="padding:7px 14px;border-radius:7px;border:1px solid #ffccc7;background:#fff0f0;color:#ff4d4f;cursor:pointer;font-size:13px" onclick="delRoute(${r.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }).join('')}</div>`;
+}
+
+async function fetchSpots() {
+    if (allSpots.length) return;
+    const d = await api('/api/spot/list?page=1&size=200');
+    allSpots = d && d.records ? d.records : [];
+}
+
+async function openEditor(id) {
+    await fetchSpots();
+    selectedSpots = [];
+    document.getElementById('editorId').value = id || '';
+    document.getElementById('eName').value = '';
+    document.getElementById('eDays').value = 1;
+    document.getElementById('eDesc').value = '';
+    document.getElementById('spotKw').value = '';
+    document.getElementById('editorTitle').textContent = id ? '编辑自定义线路' : '新建自定义线路';
+
+    if (id) {
+        const r = await api('/api/customRoute/detail?id=' + id);
+        if (r) {
+            document.getElementById('eName').value = r.name;
+            document.getElementById('eDays').value = r.days || 1;
+            document.getElementById('eDesc').value = r.description || '';
+            selectedSpots = safeJson(r.spotData, []);
+        }
+    }
+    filterSpots();
+    renderSelected();
+    document.getElementById('editorModal').classList.add('show');
+}
+function closeEditor() { document.getElementById('editorModal').classList.remove('show'); }
+
+function filterSpots() {
+    const kw = document.getElementById('spotKw').value.toLowerCase();
+    const filtered = allSpots.filter(s => (s.name || '').toLowerCase().includes(kw));
+    const selectedIds = new Set(selectedSpots.map(s => s.spotId));
+    document.getElementById('spotPicker').innerHTML = filtered.map(s =>
+        `<div class="sp-row${selectedIds.has(s.id)?' selected':''}" onclick="toggleSpot(${s.id},'${esc(s.name)}')">
+            <span>${s.name} <span style="font-size:11px;color:#aaa">${s.region||''}</span></span>
+            <span style="color:${selectedIds.has(s.id)?'#c41a1a':'#ccc'};font-size:18px">${selectedIds.has(s.id)?'✓':''}</span>
+        </div>`
+    ).join('') || '<div style="padding:16px;text-align:center;color:#ccc">无匹配结果</div>';
+}
+
+function toggleSpot(id, name) {
+    const idx = selectedSpots.findIndex(s => s.spotId === id);
+    if (idx >= 0) selectedSpots.splice(idx, 1);
+    else selectedSpots.push({ spotId: id, spotName: name, day: 1, order: selectedSpots.length + 1 });
+    filterSpots();
+    renderSelected();
+}
+
+function renderSelected() {
+    const box = document.getElementById('selectedSpotsBox');
+    if (!selectedSpots.length) { box.innerHTML = '<span style="color:#ccc;font-size:12px">尚未选择景点</span>'; return; }
+    box.innerHTML = selectedSpots.map((s, i) =>
+        `<span class="spot-tag" style="cursor:default">
+            ${s.spotName}
+            <span onclick="removeSpot(${i})" style="cursor:pointer;margin-left:4px;color:#888">×</span>
+        </span>`
+    ).join('');
+}
+function removeSpot(i) { selectedSpots.splice(i, 1); filterSpots(); renderSelected(); }
+
+async function saveRoute() {
+    const name = document.getElementById('eName').value.trim();
+    if (!name) { showToast('请输入线路名称', 'warning'); return; }
+    const id = document.getElementById('editorId').value;
+    const params = new URLSearchParams({
+        name, days: document.getElementById('eDays').value,
+        description: document.getElementById('eDesc').value.trim(),
+        spotData: JSON.stringify(selectedSpots)
+    });
+    if (id) params.set('id', id);
+    const res = await api('/api/customRoute/save?' + params.toString());
+    if (res) { closeEditor(); showToast('保存成功'); loadRoutes(); }
+}
+
+async function delRoute(id) {
+    showConfirm('确定删除该线路？', async () => {
+        const res = await api('/api/customRoute/delete?id=' + id);
+        if (res) { showToast('已删除'); loadRoutes(); }
+    });
+}
+
+async function submitForReview(id) {
+    showConfirm('确定将此线路提交审核？通过后将被纳入官方推荐线路。', async () => {
+        const res = await api('/api/customRoute/submitForReview?id=' + id);
+        if (res) { showToast('已提交审核，请等待管理员处理'); loadRoutes(); }
+    });
+}
+
+function safeJson(s, def) { try { return JSON.parse(s || '[]'); } catch(e) { return def; } }
+function fmtDate(d) { if (!d) return '--'; return new Date(d).toLocaleDateString('zh-CN'); }
+function esc(s) { return (s||'').replace(/'/g,"\\'"); }
+function loadSidebar() {
+    const u = getUser();
+    if (!u) return;
+    const av = document.getElementById('sidebarAvatar');
+    if (av) {
+        const initial = (u.nickname || u.username || 'U')[0].toUpperCase();
+        av.textContent = initial;
+        if (u.avatar) {
+            av.innerHTML = '<img src="' + API + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent=\'' + initial + '\'">';
+        }
+    }
+    const nm = document.getElementById('sidebarName');
+    if (nm) nm.textContent = u.nickname || u.username;
+    const ph = document.getElementById('sidebarPhone');
+    if (ph) ph.textContent = u.phone || '';
+}
+
+loadRoutes();
+</script>
+</body>
+</html>

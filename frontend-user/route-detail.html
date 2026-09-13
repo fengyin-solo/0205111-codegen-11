@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线路详情 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .timeline{position:relative;padding-left:30px;margin-top:24px}
+        .timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--red)}
+        .timeline-day{margin-bottom:28px}
+        .timeline-day h4{font-size:16px;color:var(--red);margin-bottom:14px;position:relative}
+        .timeline-day h4::before{content:'';position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid #fff;box-shadow:0 0 0 2px var(--red)}
+        .timeline-spot{background:#f9f9f9;border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;align-items:center;transition:background .2s}
+        .timeline-spot:hover{background:#f0f0f0}
+        .timeline-spot .spot-order{width:28px;height:28px;background:var(--red);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+        .timeline-spot .spot-info{flex:1;min-width:0}
+        .timeline-spot .spot-info h5{font-size:14px;margin-bottom:4px}
+        .timeline-spot .spot-info p{font-size:13px;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        /* 地图 */
+        #routeMapSection{margin-top:32px}
+        #routeMap{height:420px;border-radius:12px;border:1px solid var(--border);z-index:0;overflow:hidden}
+        .map-section-title{font-size:18px;margin-bottom:12px;font-weight:600}
+        .leaflet-popup-content b{color:#c41a1a}
+        .map-marker-num{background:#c41a1a;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+        .pay-opt:has(input:checked){border-color:var(--red) !important;background:#fff5f5}
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes" class="active">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="detail-header">
+    <div class="container">
+        <h1 id="routeName">加载中...</h1>
+        <div class="meta">
+            <span id="routeDays" class="meta-item"><i class="fas fa-calendar-day"></i> --</span>
+            <span id="routeTheme" class="meta-item theme-badge"></span>
+            <span id="routeBudget" class="meta-item" style="font-weight:700"></span>
+            <span id="routeViews" class="meta-item views-badge"><i class="fas fa-eye"></i> --</span>
+        </div>
+    </div>
+</div>
+
+<div class="section" style="padding-top:0">
+    <div class="container">
+        <div class="detail-content">
+            <div class="detail-main">
+                <div id="descSection">
+                    <h3 style="margin-bottom:12px;font-size:18px"><i class="fas fa-info-circle" style="color:var(--red);margin-right:8px"></i>线路简介</h3>
+                    <div id="routeDesc" class="culture-text">--</div>
+                </div>
+
+                <div id="trafficSection" style="margin-top:24px;display:none">
+                    <h3 style="margin-bottom:12px;font-size:18px"><i class="fas fa-bus" style="color:var(--red);margin-right:8px"></i>交通建议</h3>
+                    <div id="routeTraffic" class="culture-text"></div>
+                </div>
+
+                <div id="hotelSection" style="margin-top:24px;display:none">
+                    <h3 style="margin-bottom:12px;font-size:18px"><i class="fas fa-hotel" style="color:var(--red);margin-right:8px"></i>住宿建议</h3>
+                    <div id="routeHotel" class="culture-text"></div>
+                </div>
+
+                <!-- 地图 -->
+                <div id="routeMapSection" style="margin-top:32px;display:none">
+                    <h3 class="map-section-title"><i class="fas fa-map-marked-alt" style="color:var(--red);margin-right:8px"></i>线路地图</h3>
+                    <div id="routeMap"></div>
+                </div>
+
+                <div style="margin-top:32px">
+                    <h3 style="margin-bottom:4px;font-size:18px"><i class="fas fa-map-signs" style="color:var(--red);margin-right:8px"></i>行程安排</h3>
+                    <div id="routeTimeline" class="timeline">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-sidebar">
+                <div class="sidebar-card">
+                    <h3>操作</h3>
+                    <button id="favBtn" class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="toggleFavorite()">
+                        <i class="far fa-heart"></i> 收藏线路
+                    </button>
+                    <button id="bookBtn" class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="openBookModal()">
+                        <i class="fas fa-shopping-cart"></i> 预订线路
+                    </button>
+                    <button class="btn btn-outline" style="width:100%" onclick="printRoute()">
+                        <i class="fas fa-print"></i> 导出/打印
+                    </button>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>线路概览</h3>
+                    <table class="info-table">
+                        <tr><td>总天数</td><td id="infoDays">--</td></tr>
+                        <tr><td>预算</td><td id="infoBudget">--</td></tr>
+                        <tr><td>主题</td><td id="infoTheme">--</td></tr>
+                        <tr><td>浏览量</td><td id="infoViews">--</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="bookModal">
+    <div class="modal" style="position:relative">
+        <span class="modal-close" onclick="closeBookModal()">&times;</span>
+        <h3 style="margin-bottom:16px">预订线路</h3>
+        <div class="form-group">
+            <label>出行人数</label>
+            <input type="number" id="bookQty" value="1" min="1" max="20" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r)">
+        </div>
+        <div class="form-group" style="margin-top:12px">
+            <label>出发日期</label>
+            <input type="date" id="departDate" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r)">
+        </div>
+        <div class="form-group" style="margin-top:16px">
+            <label>预计费用</label>
+            <div id="bookCost" style="font-size:20px;color:var(--red);font-weight:700">¥0</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="confirmBook()">确认预订</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="payModal">
+    <div class="modal" style="position:relative">
+        <span class="modal-close" onclick="closePayModal()">&times;</span>
+        <h3 style="margin-bottom:16px">确认支付</h3>
+        <div style="text-align:center;margin:20px 0">
+            <div style="font-size:32px;color:var(--red);font-weight:700" id="payAmount">¥0</div>
+            <div style="color:var(--text2);margin-top:4px">订单金额</div>
+        </div>
+        <div style="margin:24px 0">
+            <div style="display:flex;gap:12px;margin-bottom:12px">
+                <label class="pay-opt" style="flex:1;display:flex;align-items:center;gap:8px;padding:14px;border:2px solid var(--red);border-radius:var(--r);cursor:pointer;background:#fff5f5" onclick="selectPayMethod('WECHAT')">
+                    <input type="radio" name="payMethod" value="WECHAT" checked>
+                    <i class="fab fa-weixin" style="font-size:22px;color:#07c160"></i> 微信支付
+                </label>
+            </div>
+            <p style="font-size:13px;color:var(--text2);margin-bottom:8px">银行卡支付：</p>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_ICBC')">
+                    <input type="radio" name="payMethod" value="BANK_ICBC">
+                    <i class="fas fa-university" style="color:#C41A1A"></i> 工商银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_CCB')">
+                    <input type="radio" name="payMethod" value="BANK_CCB">
+                    <i class="fas fa-university" style="color:#003DA5"></i> 建设银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_ABC')">
+                    <input type="radio" name="payMethod" value="BANK_ABC">
+                    <i class="fas fa-university" style="color:#009944"></i> 农业银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_BOC')">
+                    <input type="radio" name="payMethod" value="BANK_BOC">
+                    <i class="fas fa-university" style="color:#C41A1A"></i> 中国银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_BOCOM')">
+                    <input type="radio" name="payMethod" value="BANK_BOCOM">
+                    <i class="fas fa-university" style="color:#003976"></i> 交通银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_CMB')">
+                    <input type="radio" name="payMethod" value="BANK_CMB">
+                    <i class="fas fa-university" style="color:#E60012"></i> 招商银行
+                </label>
+                <label class="pay-opt" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px" onclick="selectPayMethod('BANK_PSBC')">
+                    <input type="radio" name="payMethod" value="BANK_PSBC">
+                    <i class="fas fa-university" style="color:#007236"></i> 邮储银行
+                </label>
+            </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="confirmPay()">确认支付（模拟）</button>
+        <div style="text-align:center;margin-top:12px"><a href="orders.html" style="color:var(--text2);font-size:13px">稍后支付 →</a></div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/common.js"></script>
+<script>
+const routeId = getParam('id');
+let isFavorited = false, routeData = null, lastOrderId = null, payMethod = 'WECHAT';
+
+if (!routeId) { location.href = 'routes.html'; }
+
+function renderRouteContent() {
+    if (!routeData) return;
+    const name = getLang(routeData, 'name') || routeData.name;
+    const desc = getLang(routeData, 'description') || routeData.description || '--';
+    document.title = name + ' - 贵州红色旅游';
+    document.getElementById('routeName').textContent = name;
+    document.getElementById('routeDesc').innerHTML = desc.split('\n').map(p => `<p>${p}</p>`).join('');
+}
+
+async function loadDetail() {
+    routeData = await api(`/api/route/detail?id=${routeId}`);
+    if (!routeData) { document.getElementById('routeName').textContent = '线路不存在'; return; }
+
+    document.getElementById('routeDays').innerHTML = `<i class="fas fa-calendar-day"></i> ${routeData.days || 0} 天`;
+    const themeEl = document.getElementById('routeTheme');
+    if (routeData.theme) { themeEl.innerHTML = `<i class="fas fa-tag"></i> ${routeData.theme}`; } else { themeEl.style.display = 'none'; }
+    document.getElementById('routeBudget').innerHTML = routeData.budget ? `<i class="fas fa-yen-sign"></i> 预算 ¥${routeData.budget}` : '';
+    document.getElementById('routeViews').innerHTML = `<i class="fas fa-eye"></i> ${(routeData.viewCount || 0).toLocaleString()} 浏览`;
+
+    if (routeData.trafficSuggestion) {
+        document.getElementById('trafficSection').style.display = 'block';
+        document.getElementById('routeTraffic').innerHTML = routeData.trafficSuggestion.split('\n').map(p => `<p>${p}</p>`).join('');
+    }
+    if (routeData.hotelSuggestion) {
+        document.getElementById('hotelSection').style.display = 'block';
+        document.getElementById('routeHotel').innerHTML = routeData.hotelSuggestion.split('\n').map(p => `<p>${p}</p>`).join('');
+    }
+
+    document.getElementById('infoDays').textContent = (routeData.days || 0) + '天';
+    document.getElementById('infoBudget').textContent = routeData.budget ? '¥' + routeData.budget : '--';
+    document.getElementById('infoTheme').textContent = routeData.theme || '--';
+    document.getElementById('infoViews').textContent = routeData.viewCount || 0;
+
+    renderRouteContent();
+}
+
+document.addEventListener('langchange', () => { renderRouteContent(); });
+
+async function loadRouteSpots() {
+    const spots = await api(`/api/route/spots?routeId=${routeId}`);
+    const container = document.getElementById('routeTimeline');
+    if (!spots || spots.length === 0) {
+        container.innerHTML = '<div class="empty"><p>暂无行程安排</p></div>';
+        return;
+    }
+
+    const grouped = {};
+    spots.forEach(s => {
+        const day = s.dayNumber || s.day_number || 1;
+        if (!grouped[day]) grouped[day] = [];
+        grouped[day].push(s);
+    });
+
+    let globalIdx = 0;
+    let html = '';
+    Object.keys(grouped).sort((a, b) => a - b).forEach(day => {
+        html += `<div class="timeline-day"><h4>第${day}天</h4>`;
+        grouped[day].forEach((s, idx) => {
+            globalIdx++;
+            const name = getLang(s, 'spotName') || s.spotName || s.name || '景点';
+            html += `
+                <div class="timeline-spot" ${s.spotId ? `onclick="location.href='spot-detail.html?id=${s.spotId}'" style="cursor:pointer"` : ''}>
+                    <div class="spot-order">${globalIdx}</div>
+                    <div class="spot-info">
+                        <h5>${name}</h5>
+                        <p>${s.description || s.remark || ''}</p>
+                    </div>
+                </div>`;
+        });
+        html += '</div>';
+    });
+    container.innerHTML = html;
+
+    // 初始化地图
+    initRouteMap(spots);
+}
+
+function initRouteMap(spots) {
+    const valid = spots.filter(s => s.latitude && s.longitude);
+    if (valid.length === 0) return;
+
+    document.getElementById('routeMapSection').style.display = 'block';
+
+    const map = L.map('routeMap', { scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18
+    }).addTo(map);
+
+    const bounds = L.latLngBounds();
+    const coords = [];
+    let seq = 1;
+
+    // 按 dayNumber + sortOrder 顺序绘制
+    const sorted = [...valid].sort((a, b) => {
+        const da = a.dayNumber || 1, db = b.dayNumber || 1;
+        if (da !== db) return da - db;
+        return (a.sortOrder || 0) - (b.sortOrder || 0);
+    });
+
+    sorted.forEach(s => {
+        const latlng = [s.latitude, s.longitude];
+        bounds.extend(latlng);
+        coords.push(latlng);
+
+        // 自定义编号 marker
+        const icon = L.divIcon({
+            className: '',
+            html: `<div class="map-marker-num">${seq++}</div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+        });
+
+        const name = getLang(s, 'spotName') || s.spotName || '景点';
+        L.marker(latlng, { icon })
+            .addTo(map)
+            .bindPopup(`<b>${name}</b><br><span style="font-size:12px;color:#666">第${s.dayNumber || 1}天</span>`);
+    });
+
+    // 虚线路径
+    L.polyline(coords, { color: '#c41a1a', weight: 3, dashArray: '10,6', opacity: 0.8 }).addTo(map);
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+}
+
+async function checkFavorite() {
+    const user = getUser();
+    if (!user) return;
+    const res = await api(`/api/favorite/check?targetType=ROUTE&targetId=${routeId}`);
+    if (res) {
+        isFavorited = true;
+        updateFavBtn();
+    }
+}
+
+function updateFavBtn() {
+    const btn = document.getElementById('favBtn');
+    if (isFavorited) {
+        btn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-primary');
+    } else {
+        btn.innerHTML = '<i class="far fa-heart"></i> 收藏线路';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline');
+    }
+}
+
+async function toggleFavorite() {
+    if (!requireLogin()) return;
+    if (isFavorited) {
+        var res = await api(`/api/favorite/remove?targetType=ROUTE&targetId=${routeId}`);
+        if (res === null) return;
+        isFavorited = false;
+        showToast('已取消收藏');
+    } else {
+        var res = await api(`/api/favorite/add?targetType=ROUTE&targetId=${routeId}`);
+        if (res === null) return;
+        isFavorited = true;
+        showToast('已收藏');
+    }
+    updateFavBtn();
+}
+
+/* ========== 预订 & 支付 ========== */
+function openBookModal() {
+    if (!getUser()) { showToast('请先登录', 'error'); setTimeout(() => location.href = 'login.html', 1000); return; }
+    if (!routeData) { showToast('线路数据加载中，请稍候', 'warn'); return; }
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('departDate').value = today;
+    document.getElementById('bookQty').value = 1;
+    calcCost();
+    document.getElementById('bookModal').classList.add('show');
+}
+
+function closeBookModal() { document.getElementById('bookModal').classList.remove('show'); }
+
+function calcCost() {
+    const qty = parseInt(document.getElementById('bookQty').value) || 1;
+    const budget = routeData ? (routeData.budget || 0) : 0;
+    const cost = budget * qty;
+    document.getElementById('bookCost').textContent = '¥' + cost;
+    return cost;
+}
+
+document.getElementById('bookQty').addEventListener('input', calcCost);
+
+async function confirmBook() {
+    if (!getUser()) { showToast('请先登录', 'error'); setTimeout(() => location.href = 'login.html', 1000); return; }
+    const amount = calcCost();
+    if (amount <= 0) { showToast('该线路暂无定价，无法预订', 'warn'); return; }
+    const qty = parseInt(document.getElementById('bookQty').value) || 1;
+    const data = await api('/api/order/create?orderType=ROUTE&targetId=' + routeId + '&targetName=' + encodeURIComponent(routeData.name) + '&amount=' + amount + '&quantity=' + qty);
+    if (data !== null) {
+        closeBookModal();
+        lastOrderId = data.id || data;
+        document.getElementById('payAmount').textContent = '¥' + amount;
+        document.getElementById('payModal').classList.add('show');
+    }
+}
+
+function selectPayMethod(m) { payMethod = m; document.querySelectorAll('.pay-opt').forEach(l => { var c = l.querySelector('input').value === m; l.style.borderColor = c ? 'var(--red)' : 'var(--border)'; l.style.background = c ? '#fff5f5' : ''; }); }
+function closePayModal() { document.getElementById('payModal').classList.remove('show'); }
+
+async function confirmPay() {
+    if (!lastOrderId) return;
+    const data = await api('/api/order/pay?orderId=' + lastOrderId + '&payMethod=' + payMethod);
+    if (data !== null) {
+        lastOrderId = null;
+        closePayModal();
+        showToast('支付成功！预订完成');
+        setTimeout(() => location.href = 'orders.html', 1200);
+    }
+}
+
+function printRoute() {
+    window.print();
+}
+
+loadDetail();
+loadRouteSpots();
+checkFavorite();
+</script>
+</body>
+</html>

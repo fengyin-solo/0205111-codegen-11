@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游线路 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes" class="active">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="section">
+    <div class="container">
+        <div class="filter-bar">
+            <select id="filterDays">
+                <option value="">全部天数</option>
+                <option value="1">1天</option>
+                <option value="2">2天</option>
+                <option value="3">3天</option>
+                <option value="4">4天</option>
+                <option value="5">5天</option>
+                <option value="6">6天</option>
+                <option value="7">7天</option>
+            </select>
+            <select id="filterTheme"><option value="">全部主题</option></select>
+            <div class="search-box">
+                <input type="text" id="filterKeyword" placeholder="搜索线路名称..." data-i18n-placeholder="search">
+                <button class="btn btn-primary" onclick="loadRoutes(1)"><i class="fas fa-search"></i> 搜索</button>
+            </div>
+        </div>
+
+        <div id="routeGrid" class="card-grid">
+            <div class="loading"><div class="spinner"></div><p>加载中...</p></div>
+        </div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+let currentPage = 1;
+
+async function initFilters() {
+    const themes = await api('/api/route/themes');
+    const themeSel = document.getElementById('filterTheme');
+    if (themes) themes.forEach(th => {
+        const o = document.createElement('option');
+        o.value = th; o.textContent = th;
+        themeSel.appendChild(o);
+    });
+}
+
+async function loadRoutes(page) {
+    currentPage = page;
+    const days = document.getElementById('filterDays').value;
+    const theme = document.getElementById('filterTheme').value;
+    const keyword = document.getElementById('filterKeyword').value;
+
+    const grid = document.getElementById('routeGrid');
+    grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+
+    const res = await api(`/api/route/list?page=${page}&size=9&days=${encodeURIComponent(days)}&theme=${encodeURIComponent(theme)}&keyword=${encodeURIComponent(keyword)}`);
+    if (!res) { grid.innerHTML = '<div class="empty"><i class="fas fa-route"></i><p>加载失败，请重试</p></div>'; return; }
+
+    const list = res.records || res.list || res;
+    const total = res.total || (Array.isArray(res) ? res.length : 0);
+
+    if (!list || list.length === 0) {
+        grid.innerHTML = '<div class="empty"><i class="fas fa-route"></i><p>暂无线路数据</p></div>';
+        document.getElementById('pagination').innerHTML = '';
+        return;
+    }
+
+    grid.innerHTML = list.map(r => `
+        <div class="card" onclick="location.href='route-detail.html?id=${r.id}'">
+            <div class="card-img">
+                ${r.coverImage ? `<img src="${API + r.coverImage}" alt="${r.name}" onerror="imgError(this)">` : ''}
+                <div class="placeholder-icon"><i class="fas fa-route"></i></div>
+                ${r.theme ? `<span class="card-tag">${r.theme}</span>` : ''}
+            </div>
+            <div class="card-body">
+                <h3>${r.name || ''}</h3>
+                <p style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+                    <span class="tag tag-red"><i class="fas fa-calendar-day"></i> ${r.days || 0}天</span>
+                    ${r.budget ? `<span class="tag tag-gold"><i class="fas fa-yen-sign"></i> ¥${r.budget}</span>` : ''}
+                </p>
+                <div class="card-meta">
+                    <span><i class="fas fa-eye"></i> ${r.viewCount || 0}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    renderPagination(document.getElementById('pagination'), currentPage, total, 9, 'loadRoutes');
+}
+
+document.getElementById('filterKeyword').addEventListener('keyup', e => { if (e.key === 'Enter') loadRoutes(1); });
+
+initFilters();
+loadRoutes(1);
+</script>
+</body>
+</html>

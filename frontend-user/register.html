@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span data-i18n="home">贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="form-page">
+    <div class="form-card">
+        <h2><i class="fas fa-user-plus" style="color:var(--red);margin-right:8px"></i>注册账号</h2>
+        <p class="subtitle">创建账号，探索贵州红色旅游</p>
+        <div class="form-group">
+            <label><i class="fas fa-user"></i> 用户名</label>
+            <input type="text" id="username" placeholder="请输入用户名">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-phone"></i> 手机号</label>
+            <input type="tel" id="phone" placeholder="请输入手机号">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-lock"></i> 密码</label>
+            <input type="password" id="password" placeholder="请输入密码">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-lock"></i> 确认密码</label>
+            <input type="password" id="confirmPassword" placeholder="请再次输入密码">
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" onclick="doRegister()">注 册</button>
+        </div>
+        <div class="form-footer">
+            已有账号？<a href="login.html">去登录</a>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+document.getElementById('confirmPassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doRegister();
+});
+
+async function doRegister() {
+    var username = document.getElementById('username').value.trim();
+    var phone = document.getElementById('phone').value.trim();
+    var password = document.getElementById('password').value.trim();
+    var confirm = document.getElementById('confirmPassword').value.trim();
+    if (!username) { showToast('请先给自己起个昵称吧~', 'warning'); return; }
+    if (!phone) { showToast('还差手机号哦，方便我们为你同步订单与通知~', 'warning'); return; }
+    if (!/^1\d{10}$/.test(phone)) { showToast('手机号格式不太对，请输入 11 位手机号', 'warning'); return; }
+    if (!password || !confirm) { showToast('请设置并确认密码后再注册', 'warning'); return; }
+    if (password !== confirm) { showToast('两次密码输入不一致', 'error'); return; }
+    var data = await api('/api/auth/register?username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password) + '&phone=' + encodeURIComponent(phone));
+    if (data) {
+        saveUser(data);
+        showToast('注册成功');
+        setTimeout(function() { location.href = 'index.html'; }, 500);
+    }
+}
+</script>
+</body>
+</html>

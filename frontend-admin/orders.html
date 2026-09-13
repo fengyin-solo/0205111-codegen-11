@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 订单管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><i class="fas fa-flag"></i> 管理后台</div>
+        <nav class="sidebar-nav">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> 仪表盘</a>
+            <a href="users.html"><i class="fas fa-users"></i> 用户管理</a>
+            <a href="spots.html"><i class="fas fa-map-marker-alt"></i> 景点管理</a>
+            <a href="routes.html"><i class="fas fa-route"></i> 线路管理</a>
+            <a href="culture.html"><i class="fas fa-book"></i> 文化管理</a>
+            <a href="hotels.html"><i class="fas fa-hotel"></i> 酒店管理</a>
+            <a href="foods.html"><i class="fas fa-utensils"></i> 美食管理</a>
+            <a href="comments.html"><i class="fas fa-comments"></i> 留言管理</a>
+            <a href="orders.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
+            <a href="faqs.html"><i class="fas fa-question-circle"></i> FAQ管理</a>
+            <div style="border-top:1px solid rgba(255,255,255,.12);margin:8px 12px"></div>
+            <a href="feedbacks.html"><i class="fas fa-bullhorn"></i> 问题反馈</a>
+            <a href="route-review.html"><i class="fas fa-clipboard-check"></i> 线路审核</a>
+            <a href="spot-review.html"><i class="fas fa-search-plus"></i> 景点审核</a>
+            <a href="permissions.html"><i class="fas fa-shield-alt"></i> 权限配置</a>
+            <a href="customer-service.html"><i class="fas fa-headset"></i> 人工客服</a>
+        </nav>
+    </aside>
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1>订单管理</h1>
+            <div class="top-bar-right"><span id="adminName"></span> <a href="#" onclick="doLogout()">退出</a></div>
+        </header>
+        <div class="content">
+            <div class="card">
+                <div class="filter-bar">
+                    <select class="form-control" id="fOrderType" onchange="loadData(1)">
+                        <option value="">全部类型</option>
+                        <option value="SPOT">景点</option>
+                        <option value="ROUTE">线路</option>
+                        <option value="HOTEL">酒店</option>
+                        <option value="FOOD">美食</option>
+                    </select>
+                    <select class="form-control" id="fStatus" onchange="loadData(1)">
+                        <option value="">全部状态</option>
+                        <option value="PENDING">待支付</option>
+                        <option value="PAID">已支付</option>
+                        <option value="COMPLETED">已完成</option>
+                        <option value="CANCELLED">已取消</option>
+                        <option value="REFUNDED">已退款</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadData(1)"><i class="fas fa-search"></i> 筛选</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>订单号</th><th>用户</th><th>类型</th><th>目标</th><th>金额</th><th>状态</th><th>支付方式</th><th>时间</th><th>操作</th></tr></thead>
+                        <tbody id="tableBody"><tr><td colspan="9" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin-common.js"></script>
+<script>
+if (!requireAdmin()) throw '';
+renderSidebar();
+
+let currentPage = 1;
+
+const statusMap = {
+    'PENDING': { text: '待支付', cls: 'badge-warning' },
+    'PAID': { text: '已支付', cls: 'badge-info' },
+    'COMPLETED': { text: '已完成', cls: 'badge-success' },
+    'CANCELLED': { text: '已取消', cls: 'badge-default' },
+    'REFUNDED': { text: '已退款', cls: 'badge-danger' }
+};
+
+const typeMap = { 'SPOT': '景点', 'ROUTE': '线路', 'HOTEL': '酒店', 'FOOD': '美食' };
+
+async function loadData(page) {
+    currentPage = page;
+    const orderType = document.getElementById('fOrderType').value;
+    const status = document.getElementById('fStatus').value;
+    let url = `/api/admin/order/list?page=${page}&size=10`;
+    if (orderType) url += `&orderType=${orderType}`;
+    if (status) url += `&status=${status}`;
+
+    document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    const data = await api(url);
+    if (!data) { document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="empty-state">加载失败</td></tr>'; return; }
+
+    const list = data.records || data.list || data || [];
+    const total = data.pages || data.totalPages || Math.ceil((data.total || list.length) / 10);
+    if (!list.length) { document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> 暂无数据</td></tr>'; document.getElementById('pagination').innerHTML = ''; return; }
+
+    let h = '';
+    list.forEach(o => {
+        const st = statusMap[o.status] || { text: o.status || '-', cls: 'badge-default' };
+        const tp = typeMap[o.orderType] || o.orderType || '-';
+        h += `<tr>
+            <td>${escHtml(o.orderNo || o.id)}</td>
+            <td>${escHtml(o.username || '-')}</td>
+            <td><span class="badge badge-info">${tp}</span></td>
+            <td>${escHtml(o.targetName || '-')}</td>
+            <td style="font-weight:600;color:#C41A1A">¥${o.amount != null ? o.amount : '-'}</td>
+            <td><span class="badge ${st.cls}">${st.text}</span></td>
+            <td>${payMethodName(o.payMethod || o.payType)}</td>
+            <td>${formatDate(o.createTime || o.createdAt)}</td>
+            <td class="action-btns">
+                ${o.status === 'PAID' ? `<button class="btn btn-sm btn-success" onclick="completeOrder(${o.id})">完成</button><button class="btn btn-sm btn-warning" onclick="refundOrder(${o.id})">退款</button>` : ''}
+                ${o.status === 'PENDING' ? `<button class="btn btn-sm btn-danger" onclick="cancelOrder(${o.id})">取消</button>` : ''}
+                ${o.status === 'CANCELLED' || o.status === 'REFUNDED' || o.status === 'COMPLETED' ? `<button class="btn btn-sm btn-default" onclick="deleteOrder(${o.id})">删除</button>` : ''}
+            </td>
+        </tr>`;
+    });
+    document.getElementById('tableBody').innerHTML = h;
+    renderPagination('pagination', currentPage, total, 'loadData');
+}
+
+function completeOrder(id) {
+    showConfirm('确定将此订单标记为已完成？', async () => {
+        var d = await api('/api/admin/order/complete?orderId=' + id);
+        if (d !== null) { showToast('操作成功'); loadData(currentPage); }
+    });
+}
+function cancelOrder(id) {
+    showConfirm('确定取消此订单？', async () => {
+        var d = await api('/api/admin/order/cancel?orderId=' + id);
+        if (d !== null) { showToast('操作成功'); loadData(currentPage); }
+    });
+}
+function refundOrder(id) {
+    showConfirm('确定为此订单退款？退款将自动处理。', async () => {
+        var d = await api('/api/admin/order/refund?orderId=' + id);
+        if (d !== null) { showToast('操作成功'); loadData(currentPage); }
+    });
+}
+function deleteOrder(id) {
+    showConfirm('确定删除此订单？此操作不可恢复。', async () => {
+        var d = await api('/api/admin/order/delete?orderId=' + id);
+        if (d !== null) { showToast('已删除'); loadData(currentPage); }
+    });
+}
+
+function payMethodName(m) {
+    var map = {WECHAT:'微信支付',BANK_ICBC:'工商银行',BANK_CCB:'建设银行',BANK_ABC:'农业银行',BANK_BOC:'中国银行',BANK_BOCOM:'交通银行',BANK_CMB:'招商银行',BANK_PSBC:'邮储银行',BANK:'银行卡'};
+    return m ? (map[m] || m) : '-';
+}
+
+loadData(1);
+</script>
+</body>
+</html>

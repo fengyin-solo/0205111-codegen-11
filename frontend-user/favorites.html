@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="profile-layout">
+        <div class="profile-sidebar">
+            <div class="profile-sidebar-header">
+                <div class="profile-avatar" id="sidebarAvatar"></div>
+                <h3 id="sidebarName"></h3>
+                <p id="sidebarPhone"></p>
+            </div>
+            <div class="profile-menu">
+                <a href="profile.html"><i class="fas fa-user"></i><span>个人中心</span></a>
+                <a href="favorites.html"><i class="fas fa-heart"></i><span>我的收藏</span></a>
+                <a href="orders.html"><i class="fas fa-shopping-bag"></i><span>我的订单</span></a>
+                <a href="messages.html"><i class="fas fa-bell"></i><span>消息通知</span></a>
+                <a href="my-routes.html"><i class="fas fa-route"></i><span>我的线路</span></a>
+                <a href="feedback.html"><i class="fas fa-bullhorn"></i><span>问题反馈</span></a>
+            </div>
+        </div>
+        <div class="profile-content">
+            <div class="profile-section-header">
+                <span class="profile-section-header-title"><i class="fas fa-heart"></i>我的收藏</span>
+            </div>
+            <div class="fav-tabs">
+                <div class="fav-tab active" onclick="switchFavTab('SPOT')"><i class="fas fa-mountain"></i>景点</div>
+                <div class="fav-tab" onclick="switchFavTab('ROUTE')"><i class="fas fa-route"></i>线路</div>
+                <div class="fav-tab" onclick="switchFavTab('CULTURE')"><i class="fas fa-book-open"></i>文化</div>
+            </div>
+            <div class="fav-list" id="favList"></div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+if (!requireLogin()) throw new Error('need login');
+
+let currentType = 'SPOT';
+
+function renderSidebar() {
+    const u = getUser();
+    const initial = (u.nickname || u.username || '?').charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initial;
+    if (u.avatar) {
+        document.getElementById('sidebarAvatar').innerHTML = '<img src="' + API + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent=\'' + initial + '\'">';
+    }
+    document.getElementById('sidebarName').textContent = u.nickname || u.username || '';
+    document.getElementById('sidebarPhone').textContent = u.phone || '';
+}
+
+function switchFavTab(type) {
+    currentType = type;
+    document.querySelectorAll('.fav-tab').forEach(t => t.classList.remove('active'));
+    const idx = { SPOT: 0, ROUTE: 1, CULTURE: 2 }[type] || 0;
+    document.querySelectorAll('.fav-tab')[idx].classList.add('active');
+    loadFavorites();
+}
+
+function getDetailApi(type) {
+    if (type === 'SPOT') return '/api/spot/detail?id=';
+    if (type === 'ROUTE') return '/api/route/detail?id=';
+    return '/api/culture/detail?id=';
+}
+
+function getDetailPage(type) {
+    if (type === 'SPOT') return 'spot-detail.html?id=';
+    if (type === 'ROUTE') return 'route-detail.html?id=';
+    return 'culture-detail.html?id=';
+}
+
+function emptyFav() {
+    const icons = { SPOT: 'fa-mountain', ROUTE: 'fa-route', CULTURE: 'fa-book-open' };
+    const labels = { SPOT: '景点', ROUTE: '线路', CULTURE: '红色文化' };
+    return '<div class="empty-illus">' +
+        '<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect width="80" height="80" rx="40" fill="#FFF0F0"/>' +
+        '<path d="M40 55 C40 55 18 42 18 29a12 12 0 0 1 22-6.7A12 12 0 0 1 62 29c0 13-22 26-22 26z" fill="#C41A1A" fill-opacity=".15" stroke="#C41A1A" stroke-width="2" stroke-linejoin="round"/>' +
+        '</svg>' +
+        '<p>暂无收藏的' + (labels[currentType] || '') + '</p>' +
+        '<span>浏览<a href="spots.html" style="color:var(--red);margin:0 4px">景点</a>并点击收藏按钮添加</span>' +
+    '</div>';
+}
+
+async function loadFavorites() {
+    const el = document.getElementById('favList');
+    el.innerHTML = '<div style="padding:40px 0;text-align:center"><div class="spinner" style="margin:0 auto 12px"></div><p style="color:var(--text3);font-size:14px">加载中...</p></div>';
+    const favs = await api('/api/favorite/myList?targetType=' + currentType);
+    if (!favs || favs === true || !favs.length) { el.innerHTML = emptyFav(); return; }
+
+    const details = await Promise.all(favs.map(async fav => {
+        const detail = await api(getDetailApi(currentType) + (fav.targetId || fav.id));
+        return { fav, detail };
+    }));
+    const valid = details.filter(d => d.detail);
+    if (!valid.length) { el.innerHTML = emptyFav(); return; }
+
+    el.innerHTML = valid.map(d => {
+        const item = d.detail;
+        const fav = d.fav;
+        const imgSrc = item.coverImage ? (API + item.coverImage) : '';
+        const name = item.name || item.title || '';
+        const desc = item.description || item.intro || item.content || '';
+        const location = item.location || item.region || '';
+        const theme = item.theme || item.category || '';
+        const price = item.ticketPrice !== undefined ? (item.ticketPrice > 0 ? '¥' + item.ticketPrice : '免费') : (item.budget ? '预算 ¥' + item.budget : '');
+        return '<div class="fav-item">' +
+            '<div class="fav-item-img">' + (imgSrc ? '<img src="' + imgSrc + '" onerror="imgError(this)" alt="' + name + '">' : '') + '</div>' +
+            '<div class="fav-item-body">' +
+                '<div>' +
+                    '<div class="fav-item-title"><a href="' + getDetailPage(currentType) + item.id + '">' + name + '</a></div>' +
+                    '<div class="fav-item-desc">' + desc + '</div>' +
+                '</div>' +
+                '<div class="fav-item-footer">' +
+                    '<div class="fav-item-meta">' +
+                        (location ? '<span><i class="fas fa-map-marker-alt"></i> ' + location + '</span>' : '') +
+                        (theme ? '<span><i class="fas fa-tag"></i> ' + theme + '</span>' : '') +
+                        (price ? '<span style="color:var(--red);font-weight:600">' + price + '</span>' : '') +
+                    '</div>' +
+                    '<button class="btn btn-outline btn-sm" onclick="removeFav(' + (fav.targetId || fav.id) + ',\'' + currentType + '\')"><i class="fas fa-heart-broken"></i> 取消收藏</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+async function removeFav(id, type) {
+    const data = await api('/api/favorite/remove?targetType=' + type + '&targetId=' + id);
+    if (data !== null) {
+        showToast('已取消收藏');
+        loadFavorites();
+    }
+}
+
+renderSidebar();
+loadFavorites();
+</script>
+</body>
+</html>

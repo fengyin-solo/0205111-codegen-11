@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问题反馈 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .fb-form{background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:24px;margin-bottom:22px}
+        .fb-form h3{margin:0 0 18px;font-size:16px;display:flex;align-items:center;gap:8px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+        .cat-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+        .cat-btn{padding:6px 14px;border-radius:20px;border:1.5px solid #e0e0e0;background:#fff;cursor:pointer;font-size:12px;transition:all .15s}
+        .cat-btn.active{background:#C41A1A;color:#fff;border-color:#C41A1A}
+        .fb-history{margin-top:20px}
+        .fb-item{background:#fff;border-radius:10px;border:1px solid #e8e8e8;padding:16px 18px;margin-bottom:12px}
+        .fb-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .cat-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+        .dot-BUG{background:#ff4d4f} .dot-SUGGESTION{background:#1890ff}
+        .dot-COMPLAINT{background:#faad14} .dot-GENERAL{background:#52c41a}
+        .fb-content{font-size:13px;color:#555;line-height:1.7;padding:8px 12px;background:#fafafa;border-radius:6px;border-left:3px solid #e0e0e0}
+        .fb-reply{background:#f6ffed;border-left:3px solid #52c41a;padding:10px 12px;border-radius:6px;font-size:13px;margin-top:10px}
+        .status-tag{padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600}
+        .st-PENDING{background:#fff7e6;color:#d48806}
+        .st-PROCESSING{background:#e6f7ff;color:#1890ff}
+        .st-RESOLVED{background:#f6ffed;color:#52c41a}
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html">首页</a>
+            <a href="spots.html">景点</a>
+            <a href="routes.html">线路</a>
+            <a href="culture.html">红色文化</a>
+            <a href="hotels.html">酒店</a>
+            <a href="foods.html">美食</a>
+            <a href="faq.html">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="profile-layout">
+        <div class="profile-sidebar">
+            <div class="profile-sidebar-header">
+                <div class="profile-avatar" id="sidebarAvatar"></div>
+                <h3 id="sidebarName"></h3>
+                <p id="sidebarPhone"></p>
+            </div>
+            <div class="profile-menu">
+                <a href="profile.html"><i class="fas fa-user"></i><span>个人中心</span></a>
+                <a href="favorites.html"><i class="fas fa-heart"></i><span>我的收藏</span></a>
+                <a href="orders.html"><i class="fas fa-shopping-bag"></i><span>我的订单</span></a>
+                <a href="messages.html"><i class="fas fa-bell"></i><span>消息通知</span></a>
+                <a href="my-routes.html"><i class="fas fa-route"></i><span>我的线路</span></a>
+                <a href="feedback.html" class="active"><i class="fas fa-bullhorn"></i><span>问题反馈</span></a>
+            </div>
+        </div>
+        <div class="profile-content">
+            <div class="profile-section-header">
+                <span class="profile-section-header-title"><i class="fas fa-bullhorn"></i> 问题反馈</span>
+            </div>
+
+            <!-- 提交表单 -->
+            <div class="fb-form">
+                <h3><i class="fas fa-pen-to-square" style="color:#c41a1a"></i> 提交新反馈</h3>
+                <div style="margin-bottom:14px">
+                    <div style="font-size:12px;color:#888;font-weight:600;margin-bottom:8px">反馈类型</div>
+                    <div class="cat-btns">
+                        <button class="cat-btn" id="cat_GENERAL" onclick="setCategory('GENERAL')"><i class="fas fa-comment"></i> 一般反馈</button>
+                        <button class="cat-btn" id="cat_BUG" onclick="setCategory('BUG')"><i class="fas fa-bug"></i> Bug报告</button>
+                        <button class="cat-btn" id="cat_SUGGESTION" onclick="setCategory('SUGGESTION')"><i class="fas fa-lightbulb"></i> 功能建议</button>
+                        <button class="cat-btn" id="cat_COMPLAINT" onclick="setCategory('COMPLAINT')"><i class="fas fa-flag"></i> 投诉</button>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block">标题 <span style="color:#ff4d4f">*</span></label>
+                        <input type="text" id="fbTitle" class="form-control" placeholder="请简要描述问题">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block">联系方式（可选）</label>
+                        <input type="text" id="fbContact" class="form-control" placeholder="手机号或邮箱，方便回复">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:16px">
+                    <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block">详细描述 <span style="color:#ff4d4f">*</span></label>
+                    <textarea id="fbContent" class="form-control" style="height:110px;resize:vertical" placeholder="请详细描述您遇到的问题或建议..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="submitFb()" style="padding:10px 28px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600">
+                    <i class="fas fa-paper-plane"></i> 提交反馈
+                </button>
+            </div>
+
+            <!-- 历史记录 -->
+            <div class="fb-history">
+                <div class="section-subtitle"><i class="fas fa-history" style="color:#888"></i>我的反馈记录</div>
+                <div id="historyWrap"><div class="loading"><i class="fas fa-spinner fa-spin"></i></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+requireLogin();
+renderHeader();
+loadSidebar();
+
+let currentCat = 'GENERAL';
+
+const fromSpotId = getParam('spotId');
+const fromSpotName = getParam('spotName');
+if (fromSpotId && fromSpotName) {
+    document.getElementById('fbTitle').value = '关于景点【' + fromSpotName + '】的反馈';
+    setCategory('BUG');
+} else {
+    setCategory('GENERAL');
+}
+
+function setCategory(cat) {
+    currentCat = cat;
+    ['GENERAL','BUG','SUGGESTION','COMPLAINT'].forEach(c => {
+        document.getElementById('cat_' + c).classList.toggle('active', c === cat);
+    });
+}
+
+async function submitFb() {
+    const title = document.getElementById('fbTitle').value.trim();
+    const content = document.getElementById('fbContent').value.trim();
+    if (!title || !content) { showToast('请填写标题和描述', 'warning'); return; }
+    const contact = document.getElementById('fbContact').value.trim();
+    const params = new URLSearchParams({ title, content, category: currentCat });
+    if (contact) params.set('contact', contact);
+    const res = await api('/api/feedback/submit?' + params.toString());
+    if (res) {
+        showToast('反馈已提交，感谢您的意见！');
+        document.getElementById('fbTitle').value = '';
+        document.getElementById('fbContent').value = '';
+        document.getElementById('fbContact').value = '';
+        setCategory('GENERAL');
+        loadHistory();
+    }
+}
+
+async function loadHistory() {
+    const data = await api('/api/feedback/my');
+    const wrap = document.getElementById('historyWrap');
+    if (!data || !data.length) {
+        wrap.innerHTML = '<div style="text-align:center;color:#aaa;padding:30px;font-size:13px">暂无反馈记录</div>'; return;
+    }
+    wrap.innerHTML = data.map(fb => `
+        <div class="fb-item">
+            <div class="fb-item-header">
+                <div style="display:flex;align-items:center;gap:6px">
+                    <span class="cat-dot dot-${fb.category}"></span>
+                    <span style="font-weight:600;font-size:14px">${fb.title}</span>
+                    <span style="font-size:11px;color:#aaa">${catLabel(fb.category)}</span>
+                </div>
+                <span class="status-tag st-${fb.status}">${statusLabel(fb.status)}</span>
+            </div>
+            <div style="font-size:12px;color:#aaa;margin-bottom:8px"><i class="fas fa-clock"></i> ${fmtDate(fb.createTime)}</div>
+            <div class="fb-content">${fb.content}</div>
+            ${fb.reply ? `
+            <div class="fb-reply">
+                <div style="font-size:11px;color:#888;margin-bottom:4px"><i class="fas fa-headset"></i> 客服回复 · ${fmtDate(fb.replyTime)}</div>
+                ${fb.reply}
+            </div>` : ''}
+        </div>`).join('');
+}
+
+function catLabel(c) { return {BUG:'Bug报告',SUGGESTION:'功能建议',COMPLAINT:'投诉',GENERAL:'一般反馈'}[c]||c; }
+function statusLabel(s) { return {PENDING:'待处理',PROCESSING:'处理中',RESOLVED:'已解决'}[s]||s; }
+function fmtDate(d) { if (!d) return '--'; return new Date(d).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function loadSidebar() {
+    const u = getUser();
+    if (!u) return;
+    const av = document.getElementById('sidebarAvatar');
+    if (av) {
+        const initial = (u.nickname || u.username || 'U')[0].toUpperCase();
+        av.textContent = initial;
+        if (u.avatar) {
+            av.innerHTML = '<img src="' + API + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent=\'' + initial + '\'">';
+        }
+    }
+    const nm = document.getElementById('sidebarName');
+    if (nm) nm.textContent = u.nickname || u.username;
+    const ph = document.getElementById('sidebarPhone');
+    if (ph) ph.textContent = u.phone || '';
+}
+
+loadHistory();
+</script>
+</body>
+</html>
