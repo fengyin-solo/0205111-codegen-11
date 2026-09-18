@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行程单 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .guest-banner{background:#fff7e6;border:1px solid #ffe7ba;color:#ad6800;border-radius:var(--r);padding:12px 18px;font-size:13px;margin:24px 0 0;display:flex;align-items:center;gap:10px}
+        .guest-banner a{font-weight:600;text-decoration:underline}
+        .itin-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;margin:24px 0 48px;align-items:start}
+        @media (max-width:992px){.itin-layout{grid-template-columns:1fr}}
+        .itin-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+        .itin-card-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+        .itin-card-title i{color:var(--red)}
+        .itin-card-title .count{font-size:12px;color:var(--text3);font-weight:400}
+        .itin-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:14px}
+        .itin-input:focus{outline:none;border-color:var(--red)}
+        .itin-label{font-size:13px;font-weight:600;margin-bottom:6px;display:block}
+        .day-group{border:1px solid #f0e0e0;border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+        .day-header{background:linear-gradient(135deg,#fff5f5,#fff);padding:10px 16px;font-weight:700;font-size:14px;color:var(--red);display:flex;align-items:center;gap:8px;border-bottom:1px solid #f5e8e8}
+        .day-header span{font-size:12px;color:var(--text3);font-weight:400;margin-left:auto}
+        .day-empty{padding:18px;text-align:center;color:#ccc;font-size:13px}
+        .itin-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #faf0f0}
+        .itin-item:last-child{border-bottom:none}
+        .item-order{width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .type-badge{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0}
+        .t-SPOT{background:#c41a1a}.t-HOTEL{background:#2f54eb}.t-FOOD{background:#fa8c16}
+        .item-body{flex:1;min-width:0}
+        .item-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .item-ctrls{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;align-items:center}
+        .item-ctrls select,.item-ctrls input{padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff}
+        .item-ctrls select{padding-right:24px}
+        .item-ctrls input{width:80px}
+        .item-ctrls .unit{font-size:12px;color:var(--text3);margin-left:-4px}
+        .item-ops{display:flex;gap:4px;flex-shrink:0}
+        .item-ops button{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;font-size:11px;transition:all .15s}
+        .item-ops button:hover:not(:disabled){border-color:var(--red);color:var(--red)}
+        .item-ops button:disabled{opacity:.3;cursor:not-allowed}
+        .picker-tabs{display:flex;gap:6px;margin-bottom:12px}
+        .picker-tabs button{flex:1;padding:8px 0;border-radius:7px;border:1px solid var(--border);background:#fafafa;font-size:13px;cursor:pointer;color:var(--text2);transition:all .15s}
+        .picker-tabs button.active{background:var(--red);color:#fff;border-color:var(--red)}
+        .picker-list{max-height:300px;overflow-y:auto;border:1px solid #f0f0f0;border-radius:var(--r);margin-top:10px}
+        .picker-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid #f7f7f7;font-size:13px}
+        .picker-row:last-child{border-bottom:none}
+        .picker-row:hover{background:#fff8f8}
+        .picker-row .pname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .picker-row .pmeta{font-size:11px;color:var(--text3)}
+        .picker-row button{padding:4px 12px;border-radius:6px;border:none;background:var(--red);color:#fff;font-size:12px;cursor:pointer;flex-shrink:0}
+        .picker-row button:hover{background:var(--red-dark)}
+        .action-hint{font-size:12px;color:var(--text3);line-height:1.7;margin-top:12px}
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html" data-i18n="home">首页</a>
+            <a href="spots.html" data-i18n="spots">景点</a>
+            <a href="routes.html" data-i18n="routes">线路</a>
+            <a href="itinerary.html" data-i18n="itinerary" class="active">行程单</a>
+            <a href="culture.html" data-i18n="culture">红色文化</a>
+            <a href="hotels.html" data-i18n="hotels">酒店</a>
+            <a href="foods.html" data-i18n="foods">美食</a>
+            <a href="faq.html" data-i18n="faq">客服</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div class="container" style="flex:1;width:100%">
+    <div class="guest-banner" id="guestBanner" style="display:none">
+        <i class="fas fa-cloud-download-alt"></i>
+        <span>当前未登录，行程单保存在本机；<a href="login.html">登录</a>后将自动合并到您的账号。</span>
+    </div>
+
+    <div class="itin-layout">
+        <div>
+            <div class="itin-card">
+                <div class="itin-card-title"><i class="fas fa-pen"></i> 线路信息</div>
+                <div style="margin-bottom:14px">
+                    <label class="itin-label">线路名称 <span style="color:#ff4d4f">*</span></label>
+                    <input type="text" id="itinName" class="itin-input" placeholder="如：遵义红色三日游" maxlength="50">
+                </div>
+                <div style="display:grid;grid-template-columns:140px 1fr;gap:12px">
+                    <div>
+                        <label class="itin-label">行程天数</label>
+                        <input type="number" id="itinDays" class="itin-input" value="1" min="1" max="30">
+                    </div>
+                    <div>
+                        <label class="itin-label">简介</label>
+                        <input type="text" id="itinDesc" class="itin-input" placeholder="可选，一句话介绍这次旅行" maxlength="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="itin-card">
+                <div class="itin-card-title"><i class="fas fa-calendar-alt"></i> 行程安排 <span class="count" id="itemCount"></span></div>
+                <div id="dayGroups"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="itin-card">
+                <div class="itin-card-title"><i class="fas fa-plus-circle"></i> 添加安排</div>
+                <div class="picker-tabs">
+                    <button data-tab="SPOT" class="active" onclick="switchTab('SPOT')"><i class="fas fa-mountain"></i> 景点</button>
+                    <button data-tab="HOTEL" onclick="switchTab('HOTEL')"><i class="fas fa-hotel"></i> 酒店</button>
+                    <button data-tab="FOOD" onclick="switchTab('FOOD')"><i class="fas fa-utensils"></i> 美食</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px">
+                    <span style="color:var(--text2);white-space:nowrap">添加到</span>
+                    <select id="pickerDay" class="itin-input" style="padding:6px 28px 6px 10px"></select>
+                </div>
+                <input type="text" id="pickerKw" class="itin-input" placeholder="搜索名称…" oninput="renderPicker()">
+                <div class="picker-list" id="pickerList"><div class="day-empty">加载中…</div></div>
+            </div>
+
+            <div class="itin-card">
+                <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="saveRoute()"><i class="fas fa-save"></i> 保存行程</button>
+                <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="clearItems()"><i class="fas fa-eraser"></i> 清空安排</button>
+                <a href="my-routes.html" class="btn btn-outline" style="width:100%;display:block;border-color:var(--border);color:var(--text2)"><i class="fas fa-list"></i> 我的线路</a>
+                <p class="action-hint" id="saveHint">保存后可在「我的线路」中找到该行程，并生成只读链接分享给同伴。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><p>© 2026 贵州红色文化旅游景点信息管理系统</p></div></footer>
+
+<script src="js/common.js"></script>
+<script>
+const TYPE_META = {
+    SPOT: { icon: 'fa-mountain', label: '景点' },
+    HOTEL: { icon: 'fa-hotel', label: '酒店' },
+    FOOD: { icon: 'fa-utensils', label: '美食' }
+};
+
+let editingId = null;      // null=行程单草稿；数字=账号线路；'L...'=本机线路
+let isLocalRoute = false;
+let form = emptyItinerary();
+let pickerTab = 'SPOT';
+let pickerData = { SPOT: null, HOTEL: null, FOOD: null };
+
+function escHtml(s) { return (s == null ? '' : String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* 草稿模式下每次变更都落到本机；编辑已有线路时由“保存行程”统一提交 */
+function persist() {
+    if (!editingId) saveItinerary(form);
+}
+
+function renderAll() {
+    document.getElementById('itinName').value = form.name || '';
+    document.getElementById('itinDays').value = form.days || 1;
+    document.getElementById('itinDesc').value = form.description || '';
+    document.getElementById('saveHint').textContent = editingId
+        ? '保存后修改立即生效，同伴通过只读分享链接即可看到最新行程。'
+        : (getUser() ? '保存后可在「我的线路」中找到该行程，并生成只读链接分享给同伴。'
+                     : '保存后行程存放在本机「我的线路」中，登录后自动合并到账号。');
+    renderPickerDayOpts();
+    renderDays();
+}
+
+function renderDays() {
+    const days = Math.max(1, form.days || 1);
+    const box = document.getElementById('dayGroups');
+    document.getElementById('itemCount').textContent = '共 ' + form.items.length + ' 项安排';
+    let html = '';
+    for (let d = 1; d <= days; d++) {
+        const rows = form.items.map((it, idx) => ({ it, idx })).filter(x => x.it.day === d);
+        html += '<div class="day-group"><div class="day-header"><i class="fas fa-flag"></i> 第 ' + d + ' 天<span>' + rows.length + ' 项</span></div>';
+        if (!rows.length) {
+            html += '<div class="day-empty">这一天还没有安排，从右侧添加景点、酒店或美食</div>';
+        }
+        rows.forEach((x, i) => {
+            const it = x.it, meta = TYPE_META[it.type] || TYPE_META.SPOT;
+            let dayOpts = '';
+            for (let dd = 1; dd <= days; dd++) dayOpts += '<option value="' + dd + '"' + (dd === it.day ? ' selected' : '') + '>第' + dd + '天</option>';
+            html += '<div class="itin-item" data-idx="' + x.idx + '">' +
+                '<div class="item-order">' + (i + 1) + '</div>' +
+                '<span class="type-badge t-' + it.type + '" title="' + meta.label + '"><i class="fas ' + meta.icon + '"></i></span>' +
+                '<div class="item-body">' +
+                    '<div class="item-name">' + escHtml(it.name) + '</div>' +
+                    '<div class="item-ctrls">' +
+                        '<select data-act="day">' + dayOpts + '</select>' +
+                        (it.type === 'SPOT'
+                            ? '<span style="display:flex;align-items:center;gap:4px"><input type="number" data-act="dur" value="' + (it.duration != null ? it.duration : 120) + '" min="0" step="15"><span class="unit">分钟</span></span>'
+                            : '') +
+                    '</div>' +
+                '</div>' +
+                '<div class="item-ops">' +
+                    '<button data-act="up" title="上移"' + (i === 0 ? ' disabled' : '') + '><i class="fas fa-arrow-up"></i></button>' +
+                    '<button data-act="down" title="下移"' + (i === rows.length - 1 ? ' disabled' : '') + '><i class="fas fa-arrow-down"></i></button>' +
+                    '<button data-act="del" title="移除"><i class="fas fa-times"></i></button>' +
+                '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+    }
+    box.innerHTML = html;
+}
+
+/* 同一天内上移/下移：与数组中前一个/后一个同天项目交换位置 */
+function moveItem(idx, dir) {
+    const day = form.items[idx].day;
+    const dayIdxs = form.items.map((it, i) => i).filter(i => form.items[i].day === day);
+    const pos = dayIdxs.indexOf(idx);
+    const swapWith = dayIdxs[pos + dir];
+    if (swapWith == null) return;
+    const tmp = form.items[idx];
+    form.items[idx] = form.items[swapWith];
+    form.items[swapWith] = tmp;
+    persist();
+    renderDays();
+}
+
+document.getElementById('dayGroups').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const idx = parseInt(btn.closest('.itin-item').dataset.idx);
+    const act = btn.dataset.act;
+    if (act === 'up') moveItem(idx, -1);
+    else if (act === 'down') moveItem(idx, 1);
+    else if (act === 'del') { form.items.splice(idx, 1); persist(); renderDays(); }
+});
+document.getElementById('dayGroups').addEventListener('change', e => {
+    const el = e.target;
+    const row = el.closest('.itin-item');
+    if (!row || !el.dataset.act) return;
+    const idx = parseInt(row.dataset.idx);
+    if (el.dataset.act === 'day') {
+        form.items[idx].day = parseInt(el.value) || 1;
+        persist();
+        renderDays();
+    } else if (el.dataset.act === 'dur') {
+        form.items[idx].duration = Math.max(0, parseInt(el.value) || 0);
+        persist();
+    }
+});
+
+/* ========== 基本信息 ========== */
+document.getElementById('itinName').addEventListener('input', e => { form.name = e.target.value; persist(); });
+document.getElementById('itinDesc').addEventListener('input', e => { form.description = e.target.value; persist(); });
+document.getElementById('itinDays').addEventListener('change', e => {
+    let d = parseInt(e.target.value) || 1;
+    d = Math.min(30, Math.max(1, d));
+    form.days = d;
+    e.target.value = d;
+    form.items.forEach(it => { if (it.day > d) it.day = d; });
+    persist();
+    renderPickerDayOpts();
+    renderDays();
+});
+
+/* ========== 添加安排 ========== */
+function renderPickerDayOpts() {
+    const sel = document.getElementById('pickerDay');
+    const cur = parseInt(sel.value) || 1;
+    let html = '';
+    for (let d = 1; d <= Math.max(1, form.days || 1); d++) html += '<option value="' + d + '">第 ' + d + ' 天</option>';
+    sel.innerHTML = html;
+    sel.value = Math.min(cur, form.days || 1);
+}
+
+function switchTab(tab) {
+    pickerTab = tab;
+    document.querySelectorAll('.picker-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.getElementById('pickerKw').value = '';
+    loadPickerData(tab);
+}
+
+async function loadPickerData(type) {
+    if (pickerData[type]) { renderPicker(); return; }
+    const url = type === 'SPOT' ? '/api/spot/list?page=1&size=200'
+              : type === 'HOTEL' ? '/api/hotel/list?page=1&size=200'
+              : '/api/food/list?page=1&size=200';
+    const d = await api(url);
+    pickerData[type] = d && d.records ? d.records : (Array.isArray(d) ? d : []);
+    renderPicker();
+}
+
+function renderPicker() {
+    const list = pickerData[pickerTab];
+    const box = document.getElementById('pickerList');
+    if (!list) { box.innerHTML = '<div class="day-empty">加载中…</div>'; return; }
+    const kw = document.getElementById('pickerKw').value.trim().toLowerCase();
+    const filtered = list.filter(s => (s.name || '').toLowerCase().includes(kw));
+    if (!filtered.length) { box.innerHTML = '<div class="day-empty">无匹配结果</div>'; return; }
+    box.innerHTML = filtered.map(s => {
+        const meta = pickerTab === 'SPOT' ? (s.region || '')
+                   : pickerTab === 'HOTEL' ? (s.price ? '¥' + s.price + '/晚' : '')
+                   : (s.category || '');
+        return '<div class="picker-row">' +
+            '<span class="pname">' + escHtml(s.name) + ' <span class="pmeta">' + escHtml(meta) + '</span></span>' +
+            '<button data-id="' + s.id + '" data-name="' + escHtml(s.name) + '">添加</button>' +
+        '</div>';
+    }).join('');
+}
+
+document.getElementById('pickerList').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-id]');
+    if (!btn) return;
+    const day = parseInt(document.getElementById('pickerDay').value) || 1;
+    form.items.push({
+        type: pickerTab,
+        id: parseInt(btn.dataset.id),
+        name: btn.dataset.name,
+        day: day,
+        duration: pickerTab === 'SPOT' ? 120 : null,
+        note: ''
+    });
+    persist();
+    renderDays();
+    showToast('已加入第 ' + day + ' 天');
+});
+
+/* ========== 保存 ========== */
+async function saveRoute() {
+    const name = (form.name || '').trim();
+    if (!name) { showToast('请填写线路名称', 'warning'); document.getElementById('itinName').focus(); return; }
+    if (!form.items.length) { showToast('行程还是空的，先添加一些安排吧', 'warning'); return; }
+    const desc = (form.description || '').trim();
+    const spotData = JSON.stringify(form.items);
+
+    if (getUser() && !isLocalRoute) {
+        let url = '/api/customRoute/save?name=' + encodeURIComponent(name) +
+            '&days=' + form.days + '&description=' + encodeURIComponent(desc) +
+            '&spotData=' + encodeURIComponent(spotData);
+        if (editingId) url += '&id=' + editingId;
+        const res = await api(url);
+        if (res) {
+            if (!editingId) resetItinerary();
+            showToast('已保存到我的线路');
+            setTimeout(() => location.href = 'my-routes.html', 800);
+        }
+    } else {
+        const list = getLocalRoutes();
+        if (editingId && isLocalRoute) {
+            const r = list.find(x => x.localId === editingId);
+            if (r) { r.name = name; r.days = form.days; r.description = desc; r.items = form.items; }
+        } else {
+            list.unshift({ localId: 'L' + Date.now(), name: name, days: form.days, description: desc, items: form.items, status: 'DRAFT', createTime: Date.now() });
+        }
+        saveLocalRoutes(list);
+        if (!editingId) resetItinerary();
+        showToast(getUser() ? '已保存' : '已保存到本机，登录后将自动合并到账号');
+        setTimeout(() => location.href = 'my-routes.html', 800);
+    }
+}
+
+function clearItems() {
+    if (!form.items.length) return;
+    showConfirm('确定清空所有行程安排？', () => { form.items = []; persist(); renderDays(); });
+}
+
+/* ========== 初始化 ========== */
+async function init() {
+    if (!getUser()) document.getElementById('guestBanner').style.display = 'flex';
+    const id = getParam('id');
+    if (id) {
+        editingId = id;
+        isLocalRoute = String(id).charAt(0) === 'L';
+        if (isLocalRoute) {
+            const r = getLocalRoutes().find(x => x.localId === id);
+            if (!r) { showToast('线路不存在', 'error'); setTimeout(() => location.href = 'my-routes.html', 1000); return; }
+            form = { name: r.name, days: r.days || 1, description: r.description || '', items: normalizeItems(r.items) };
+        } else {
+            if (!getUser()) { showToast('请先登录', 'error'); setTimeout(() => location.href = 'login.html', 1000); return; }
+            const r = await api('/api/customRoute/detail?id=' + id);
+            if (!r) { setTimeout(() => location.href = 'my-routes.html', 1000); return; }
+            let items = [];
+            try { items = JSON.parse(r.spotData || '[]'); } catch (e) {}
+            form = { name: r.name, days: r.days || 1, description: r.description || '', items: normalizeItems(items) };
+        }
+        document.title = '编辑线路 - 贵州红色旅游';
+    } else {
+        form = getItinerary();
+    }
+    renderAll();
+    loadPickerData('SPOT');
+}
+
+init();
+</script>
+</body>
+</html>

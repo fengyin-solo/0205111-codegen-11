@@ -249,6 +249,19 @@ CREATE TABLE IF NOT EXISTS user_custom_route (
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 自定义线路只读分享
+CREATE TABLE IF NOT EXISTS custom_route_share (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    route_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL COMMENT '创建者用户ID',
+    share_code VARCHAR(32) NOT NULL UNIQUE COMMENT '分享码',
+    status VARCHAR(20) DEFAULT 'ACTIVE' COMMENT 'ACTIVE|CLOSED|DELETED',
+    expire_time DATETIME COMMENT '分享过期时间',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_route_id (route_id),
+    INDEX idx_share_code (share_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 角色表
 CREATE TABLE IF NOT EXISTS sys_role (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

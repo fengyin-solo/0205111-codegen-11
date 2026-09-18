@@ -16,7 +16,7 @@ public class UserCustomRoute implements Serializable {
     private String name;
     private String description;
     private Integer days;
-    /** JSON 数组，元素格式：{spotId, spotName, day, order, note} */
+    /** JSON 数组，元素格式：{type:SPOT|HOTEL|FOOD, id, name, day, duration, note}（兼容旧格式 {spotId, spotName, day, order}） */
     private String spotData;
     /** DRAFT=草稿, SUBMITTED=已提交审核, APPROVED=已纳入推荐, REJECTED=驳回 */
     private String status;
@@ -26,4 +26,7 @@ public class UserCustomRoute implements Serializable {
 
     @TableField(exist = false)
     private String username;
+    /** 当前有效分享码（非数据库字段） */
+    @TableField(exist = false)
+    private String shareCode;
 }

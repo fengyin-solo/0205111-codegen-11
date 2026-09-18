@@ -45,7 +45,7 @@ function requireLogin() { if (!getUser()) { location.href = 'login.html'; return
 
 /* ========== i18n ========== */
 const LANG = {
-    zh: { home:'首页',spots:'景点',routes:'线路',culture:'红色文化',hotels:'酒店',foods:'美食',faq:'客服',login:'登录',register:'注册',logout:'退出',profile:'个人中心',favorites:'我的收藏',orders:'我的订单',messages:'消息',search:'搜索',more:'查看更多',price:'价格',free:'免费',day:'天',book:'预订',collect:'收藏',collected:'已收藏',like:'点赞',liked:'已赞',comment:'评论',submit:'提交',cancel:'取消',pay:'支付',refund:'退款',allRegions:'全部地区',allThemes:'全部主题',hotSpots:'热门景点',recommendRoutes:'推荐线路',cultureStories:'红色故事',noData:'暂无数据',loading:'加载中...',
+    zh: { home:'首页',spots:'景点',routes:'线路',itinerary:'行程单',culture:'红色文化',hotels:'酒店',foods:'美食',faq:'客服',login:'登录',register:'注册',logout:'退出',profile:'个人中心',favorites:'我的收藏',orders:'我的订单',messages:'消息',search:'搜索',more:'查看更多',price:'价格',free:'免费',day:'天',book:'预订',collect:'收藏',collected:'已收藏',like:'点赞',liked:'已赞',comment:'评论',submit:'提交',cancel:'取消',pay:'支付',refund:'退款',allRegions:'全部地区',allThemes:'全部主题',hotSpots:'热门景点',recommendRoutes:'推荐线路',cultureStories:'红色故事',noData:'暂无数据',loading:'加载中...',
         spotDetail:'景点详情',routeDetail:'线路详情',cultureDetail:'文化详情',hotelDetail:'酒店详情',foodDetail:'美食详情',
         bookTicket:'预订门票',bookRoute:'预订线路',bookHotel:'预订酒店',buyFood:'购买美食',
         confirmPay:'确认支付',paySuccess:'支付成功',orderAmount:'订单金额',wechatPay:'微信支付',bankPay:'银行卡支付',payLater:'稍后支付',
@@ -65,7 +65,7 @@ const LANG = {
         loginFirst:'请先登录',loginSuccess:'登录成功',registerSuccess:'注册成功',
         footer:'© 2026 贵州红色文化旅游景点信息管理系统'
     },
-    en: { home:'Home',spots:'Spots',routes:'Routes',culture:'Red Culture',hotels:'Hotels',foods:'Food',faq:'Support',login:'Login',register:'Register',logout:'Logout',profile:'Profile',favorites:'Favorites',orders:'Orders',messages:'Messages',search:'Search',more:'More',price:'Price',free:'Free',day:'Day(s)',book:'Book',collect:'Collect',collected:'Collected',like:'Like',liked:'Liked',comment:'Comment',submit:'Submit',cancel:'Cancel',pay:'Pay',refund:'Refund',allRegions:'All Regions',allThemes:'All Themes',hotSpots:'Hot Spots',recommendRoutes:'Recommended Routes',cultureStories:'Red Stories',noData:'No Data',loading:'Loading...',
+    en: { home:'Home',spots:'Spots',routes:'Routes',itinerary:'Itinerary',culture:'Red Culture',hotels:'Hotels',foods:'Food',faq:'Support',login:'Login',register:'Register',logout:'Logout',profile:'Profile',favorites:'Favorites',orders:'Orders',messages:'Messages',search:'Search',more:'More',price:'Price',free:'Free',day:'Day(s)',book:'Book',collect:'Collect',collected:'Collected',like:'Like',liked:'Liked',comment:'Comment',submit:'Submit',cancel:'Cancel',pay:'Pay',refund:'Refund',allRegions:'All Regions',allThemes:'All Themes',hotSpots:'Hot Spots',recommendRoutes:'Recommended Routes',cultureStories:'Red Stories',noData:'No Data',loading:'Loading...',
         spotDetail:'Spot Detail',routeDetail:'Route Detail',cultureDetail:'Culture Detail',hotelDetail:'Hotel Detail',foodDetail:'Food Detail',
         bookTicket:'Book Ticket',bookRoute:'Book Route',bookHotel:'Book Hotel',buyFood:'Buy Food',
         confirmPay:'Confirm Payment',paySuccess:'Payment Successful',orderAmount:'Order Amount',wechatPay:'WeChat Pay',bankPay:'Bank Card',payLater:'Pay Later',
@@ -85,7 +85,7 @@ const LANG = {
         loginFirst:'Please login first',loginSuccess:'Login successful',registerSuccess:'Registration successful',
         footer:'© 2026 Guizhou Red Culture Tourism System'
     },
-    ja: { home:'ホーム',spots:'観光地',routes:'ルート',culture:'赤い文化',hotels:'ホテル',foods:'グルメ',faq:'サポート',login:'ログイン',register:'登録',logout:'ログアウト',profile:'プロフィール',favorites:'お気に入り',orders:'注文',messages:'メッセージ',search:'検索',more:'もっと見る',price:'価格',free:'無料',day:'日',book:'予約',collect:'保存',collected:'保存済',like:'いいね',liked:'いいね済',comment:'コメント',submit:'送信',cancel:'キャンセル',pay:'支払',refund:'返金',allRegions:'全地域',allThemes:'全テーマ',hotSpots:'人気観光地',recommendRoutes:'おすすめルート',cultureStories:'赤い物語',noData:'データなし',loading:'読み込み中...',
+    ja: { home:'ホーム',spots:'観光地',routes:'ルート',itinerary:'旅程表',culture:'赤い文化',hotels:'ホテル',foods:'グルメ',faq:'サポート',login:'ログイン',register:'登録',logout:'ログアウト',profile:'プロフィール',favorites:'お気に入り',orders:'注文',messages:'メッセージ',search:'検索',more:'もっと見る',price:'価格',free:'無料',day:'日',book:'予約',collect:'保存',collected:'保存済',like:'いいね',liked:'いいね済',comment:'コメント',submit:'送信',cancel:'キャンセル',pay:'支払',refund:'返金',allRegions:'全地域',allThemes:'全テーマ',hotSpots:'人気観光地',recommendRoutes:'おすすめルート',cultureStories:'赤い物語',noData:'データなし',loading:'読み込み中...',
         spotDetail:'観光地詳細',routeDetail:'ルート詳細',cultureDetail:'文化詳細',hotelDetail:'ホテル詳細',foodDetail:'グルメ詳細',
         bookTicket:'チケット予約',bookRoute:'ルート予約',bookHotel:'ホテル予約',buyFood:'グルメ購入',
         confirmPay:'支払い確認',paySuccess:'支払い完了',orderAmount:'注文金額',wechatPay:'WeChat Pay',bankPay:'銀行カード',payLater:'後で支払う',
@@ -226,6 +226,139 @@ function startSessionWatcher() {
             }
         } catch (e) {}
     }, 300000);
+}
+
+/* ========== 行程单（本地草稿 + 本地线路 + 登录合并） ========== */
+const ITIN_KEY = 'current_itinerary';          // 当前行程单草稿
+const LOCAL_ROUTES_KEY = 'local_custom_routes'; // 未登录时保存的本地线路
+
+/** 空行程单 */
+function emptyItinerary() { return { name: '', days: 1, description: '', items: [] }; }
+
+function getItinerary() {
+    try {
+        const it = JSON.parse(localStorage.getItem(ITIN_KEY));
+        if (it && Array.isArray(it.items)) { it.days = Math.max(1, parseInt(it.days) || 1); return it; }
+    } catch (e) {}
+    return emptyItinerary();
+}
+function saveItinerary(it) { localStorage.setItem(ITIN_KEY, JSON.stringify(it)); }
+function resetItinerary() { localStorage.removeItem(ITIN_KEY); }
+
+/** 统一行程项目格式：{type:SPOT|HOTEL|FOOD, id, name, day, duration, note}，兼容旧版 {spotId, spotName, day, order} */
+function normalizeItems(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map(it => {
+        const type = it.type || 'SPOT';
+        const id = it.id != null ? it.id : it.spotId;
+        return {
+            type: type,
+            id: id,
+            name: it.name || it.spotName || '',
+            day: Math.max(1, parseInt(it.day) || 1),
+            duration: it.duration != null ? it.duration : (type === 'SPOT' ? 120 : null),
+            note: it.note || ''
+        };
+    }).filter(it => it.id != null);
+}
+
+/** 把项目加入当前行程单草稿 */
+function addToItinerary(item) {
+    const it = getItinerary();
+    const day = Math.min(Math.max(1, parseInt(item.day) || 1), it.days);
+    it.items.push({
+        type: item.type, id: item.id, name: item.name,
+        day: day,
+        duration: item.type === 'SPOT' ? (item.duration != null ? item.duration : 120) : null,
+        note: item.note || ''
+    });
+    saveItinerary(it);
+    return day;
+}
+
+function getLocalRoutes() {
+    try { return JSON.parse(localStorage.getItem(LOCAL_ROUTES_KEY)) || []; } catch (e) { return []; }
+}
+function saveLocalRoutes(list) { localStorage.setItem(LOCAL_ROUTES_KEY, JSON.stringify(list)); }
+
+/**
+ * 登录后把本机行程合并到账号：本地保存的线路 + 当前行程单草稿（如有内容）。
+ * 全部成功后清除本机数据；部分失败时保留，可在“我的线路”页面重试。
+ */
+async function mergeLocalRoutes() {
+    if (!getUser()) return 0;
+    const tasks = [];
+    getLocalRoutes().forEach(r => {
+        tasks.push({ name: r.name || '我的线路', description: r.description || '', days: r.days || 1, spotData: JSON.stringify(r.items || []) });
+    });
+    const draft = getItinerary();
+    if (draft.items.length) {
+        tasks.push({ name: draft.name || '我的行程', description: draft.description || '', days: draft.days || 1, spotData: JSON.stringify(draft.items) });
+    }
+    if (!tasks.length) return 0;
+    let ok = 0;
+    for (const t of tasks) {
+        try {
+            const res = await apiRaw('/api/customRoute/save?name=' + encodeURIComponent(t.name) +
+                '&days=' + t.days + '&description=' + encodeURIComponent(t.description) +
+                '&spotData=' + encodeURIComponent(t.spotData));
+            if (res && res.code === 200) ok++;
+        } catch (e) {}
+    }
+    if (ok === tasks.length) {
+        localStorage.removeItem(LOCAL_ROUTES_KEY);
+        resetItinerary();
+        showToast('已将 ' + ok + ' 条本机行程合并到账号');
+    } else if (ok > 0) {
+        showToast('部分行程合并失败，可稍后在“我的线路”重试', 'warning');
+    }
+    return ok;
+}
+
+/**
+ * “加入行程”弹窗：选择安排到第几天（景点可填停留时长），无需登录，保存在本机行程单。
+ * opts: {type:'SPOT'|'HOTEL'|'FOOD', id, name}
+ */
+function openAddToItinerary(opts) {
+    const it = getItinerary();
+    const days = Math.max(1, it.days || 1);
+    const typeLabel = { SPOT: '景点', HOTEL: '酒店', FOOD: '美食' }[opts.type] || '项目';
+    const old = document.getElementById('addItinModal');
+    if (old) old.remove();
+    const div = document.createElement('div');
+    div.className = 'modal-overlay show';
+    div.id = 'addItinModal';
+    let dayOpts = '';
+    for (let d = 1; d <= days; d++) dayOpts += '<option value="' + d + '">第' + d + '天</option>';
+    div.innerHTML =
+        '<div class="modal" style="position:relative;max-width:400px">' +
+            '<span class="modal-close" id="addItinClose">&times;</span>' +
+            '<h3 style="margin-bottom:6px"><i class="fas fa-route" style="color:var(--red)"></i> 加入行程单</h3>' +
+            '<p style="font-size:13px;color:var(--text2);margin-bottom:16px">把' + typeLabel + '「' + (opts.name || '') + '」安排到行程单的指定一天</p>' +
+            '<div class="form-group" style="margin-bottom:12px">' +
+                '<label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">安排到</label>' +
+                '<select id="addItinDay" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r)">' + dayOpts + '</select>' +
+                '<p style="font-size:12px;color:var(--text3);margin-top:6px">当前行程单共 ' + days + ' 天，可在行程单页面调整天数</p>' +
+            '</div>' +
+            (opts.type === 'SPOT' ?
+            '<div class="form-group" style="margin-bottom:16px">' +
+                '<label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">停留时长（分钟）</label>' +
+                '<input type="number" id="addItinDuration" value="120" min="15" step="15" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r)">' +
+            '</div>' : '') +
+            '<button class="btn btn-primary" style="width:100%" id="addItinOk"><i class="fas fa-plus"></i> 加入行程单</button>' +
+        '</div>';
+    document.body.appendChild(div);
+    const close = () => div.remove();
+    div.onclick = e => { if (e.target === div) close(); };
+    document.getElementById('addItinClose').onclick = close;
+    document.getElementById('addItinOk').onclick = () => {
+        const day = parseInt(document.getElementById('addItinDay').value) || 1;
+        const durEl = document.getElementById('addItinDuration');
+        const duration = durEl ? (parseInt(durEl.value) || 120) : null;
+        addToItinerary({ type: opts.type, id: opts.id, name: opts.name, day: day, duration: duration });
+        close();
+        showToast('已加入行程单 · 第' + day + '天，<a href="itinerary.html" style="color:inherit;text-decoration:underline">查看行程单</a>');
+    };
 }
 
 /* ========== Init ========== */
