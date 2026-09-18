@@ -240,11 +240,15 @@ CREATE TABLE IF NOT EXISTS user_custom_route (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     days INT DEFAULT 1,
-    spot_data TEXT COMMENT 'JSON格式景点列表',
+    spot_data TEXT COMMENT 'JSON格式行程条目列表（景点/酒店/美食）',
     status VARCHAR(20) DEFAULT 'DRAFT' COMMENT 'DRAFT|SUBMITTED|APPROVED|REJECTED',
     reject_reason TEXT,
+    share_token VARCHAR(64) COMMENT '只读分享令牌',
+    share_expire_time DATETIME COMMENT '分享链接失效时间',
+    deleted TINYINT DEFAULT 0 COMMENT '0=正常 1=创建者已删除（软删除，保留给分享详情页提示）',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_share_token (share_token),
     INDEX idx_user (user_id),
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

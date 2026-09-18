@@ -122,8 +122,13 @@ async function load() {
                 <span><i class="fas fa-clock"></i> ${formatDate(r.createTime)}</span>
             </div>
             ${r.description ? `<div class="review-desc">${escHtml(r.description)}</div>` : ''}
-            <div style="font-size:12px;color:#888;margin-bottom:8px">包含景点：</div>
-            <div class="spot-tags">${spots.map(s => `<span class="spot-tag">${escHtml(s.spotName||s.name||'景点')}</span>`).join('')||'<span style="color:#ccc;font-size:12px">无</span>'}</div>
+            <div style="font-size:12px;color:#888;margin-bottom:8px">行程条目（按天）：</div>
+            <div class="spot-tags">${spots.map(s => {
+                const type = s.type || 'SPOT';
+                const label = type === 'HOTEL' ? '酒店' : type === 'FOOD' ? '美食' : '景点';
+                const icon = type === 'HOTEL' ? 'fa-hotel' : type === 'FOOD' ? 'fa-utensils' : 'fa-map-marker-alt';
+                return `<span class="spot-tag"><i class="fas ${icon}"></i> ${escHtml(s.name||s.spotName||'条目')}<span style="opacity:.6;margin-left:4px">${label}·D${s.day||1}</span></span>`;
+            }).join('')||'<span style="color:#ccc;font-size:12px">无</span>'}</div>
             ${r.rejectReason ? `<div style="margin-top:8px;font-size:12px;color:#ff4d4f"><i class="fas fa-comment-dots"></i> 驳回原因：${escHtml(r.rejectReason)}</div>` : ''}
             ${r.status === 'SUBMITTED' ? `
             <div class="review-actions" style="margin-top:12px">

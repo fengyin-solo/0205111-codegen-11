@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行程分享 - 贵州红色旅游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .share-wrap{max-width:820px;margin:24px auto 60px;padding:0 16px}
+        .share-header-card{background:linear-gradient(135deg,#c41a1a,#8b0000);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:20px}
+        .share-header-card h1{font-size:24px;margin-bottom:10px}
+        .share-header-card .meta{font-size:13px;opacity:.85;display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px}
+        .read-only-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:4px 12px;border-radius:14px;font-size:12px}
+        .share-desc{font-size:14px;line-height:1.7;opacity:.92;margin-top:10px}
+        .share-card{background:#fff;border-radius:14px;border:1px solid #eee;padding:22px 26px;margin-bottom:16px}
+        .share-card h3{font-size:16px;margin-bottom:16px;color:#222}
+        .day-block{margin-bottom:22px}
+        .day-title{display:flex;align-items:center;gap:10px;font-weight:700;color:#c41a1a;font-size:15px;margin-bottom:10px}
+        .day-title::after{content:'';flex:1;height:1px;background:#f0d5d5}
+        .day-item{display:flex;gap:12px;align-items:center;background:#fafafa;border-radius:10px;padding:12px 16px;margin-bottom:8px}
+        .day-item .di-order{width:28px;height:28px;border-radius:50%;background:#c41a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+        .day-item .di-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex-shrink:0}
+        .di-SPOT{background:#c41a1a}.di-HOTEL{background:#1677ff}.di-FOOD{background:#fa8c16}
+        .day-item .di-name{flex:1;font-size:14px;font-weight:600}
+        .day-item .di-type{font-size:11px;color:#999;font-weight:400;margin-left:6px}
+        .day-item .di-duration{font-size:12px;color:#666;background:#fff;border:1px solid #eee;padding:3px 10px;border-radius:10px}
+        .error-box{max-width:520px;margin:70px auto;text-align:center;background:#fff;border-radius:16px;border:1px solid #eee;padding:48px 32px}
+        .error-box .e-icon{font-size:56px;margin-bottom:18px}
+        .error-box h2{font-size:20px;margin-bottom:10px;color:#333}
+        .error-box p{font-size:14px;color:#888;line-height:1.8;margin-bottom:22px}
+        .owner-foot{text-align:center;font-size:12px;color:#aaa;margin-top:18px}
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo"><i class="fas fa-flag"></i> <span>贵州红色旅游</span></a>
+        <nav class="nav">
+            <a href="index.html">首页</a>
+            <a href="spots.html">景点</a>
+            <a href="routes.html">线路</a>
+            <a href="hotels.html">酒店</a>
+            <a href="foods.html">美食</a>
+        </nav>
+        <div class="header-right">
+            <div class="lang-switcher"><select id="langSelect" onchange="switchLang(this.value)"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+            <div id="userMenu"></div>
+        </div>
+    </div>
+</header>
+
+<div id="contentArea">
+    <div style="text-align:center;padding:80px;color:#aaa"><i class="fas fa-spinner fa-spin" style="font-size:28px"></i><p style="margin-top:12px">正在加载行程…</p></div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+renderHeader();
+
+const TYPE_LABEL = { SPOT: '景点', HOTEL: '酒店', FOOD: '美食' };
+const TYPE_ICON = { SPOT: 'fa-map-marker-alt', HOTEL: 'fa-hotel', FOOD: 'fa-utensils' };
+const STATUS_LABEL = { DRAFT: '草稿', SUBMITTED: '审核中', APPROVED: '官方推荐', REJECTED: '已驳回' };
+
+/** 统一的失效提示页：链接无效 / 已失效 / 行程被删除 */
+function renderError(code, msg, name) {
+    const isDeleted = code === 410;
+    document.getElementById('contentArea').innerHTML = `
+        <div class="error-box">
+            <div class="e-icon" style="color:${isDeleted ? '#ff4d4f' : '#faad14'}">
+                <i class="fas ${isDeleted ? 'fa-trash-alt' : 'fa-link-slash'}"></i>
+            </div>
+            <h2>${isDeleted ? '行程已被创建者删除' : '无法查看该行程'}</h2>
+            <p>${msg || '分享链接无效或已经失效'}<br>
+            ${isDeleted
+                ? (name ? `【${escHtml(name)}】` : '该行程') + '已由创建者删除，详情不再可查看。'
+                : '请联系行程创建者重新获取分享链接。'}</p>
+            <a href="index.html" class="btn btn-primary"><i class="fas fa-home"></i> 返回首页</a>
+        </div>`;
+}
+
+async function load() {
+    const token = getParam('token');
+    if (!token) { renderError(404, '分享链接无效，请向行程创建者重新获取'); return; }
+    const res = await apiRaw('/api/customRoute/shared?token=' + encodeURIComponent(token));
+    if (!res) { renderError(404, '网络异常，请稍后重试'); return; }
+    if (res.code === 410) { renderError(410, res.msg, res.data && res.data.name); return; }
+    if (res.code !== 200) { renderError(res.code || 404, res.msg || '分享链接无效，请向行程创建者重新获取'); return; }
+
+    const r = res.data;
+    let items = [];
+    try { items = JSON.parse(r.spotData || '[]'); } catch (e) {}
+    items = items.map((x, i) => {
+        if (x.type) return x;
+        return { type: 'SPOT', refId: x.spotId, name: x.spotName || x.name || '景点', day: x.day || 1, order: x.order || (i + 1), duration: x.duration != null ? x.duration : 2 };
+    });
+    const groups = {};
+    items.forEach(it => { (groups[it.day || 1] = groups[it.day || 1] || []).push(it); });
+    Object.keys(groups).forEach(d => groups[d].sort((a, b) => (a.order || 1) - (b.order || 1)));
+
+    let bodyHtml = '';
+    for (let d = 1; d <= (r.days || 1); d++) {
+        const list = groups[d] || [];
+        bodyHtml += `<div class="day-block">
+            <div class="day-title">第 ${d} 天 · ${list.length} 项安排</div>
+            ${list.length ? list.map(it => `
+                <div class="day-item">
+                    <div class="di-order">${it.order || ''}</div>
+                    <div class="di-icon di-${it.type}"><i class="fas ${TYPE_ICON[it.type] || 'fa-map-pin'}"></i></div>
+                    <div class="di-name">${escHtml(it.name)}<span class="di-type">${TYPE_LABEL[it.type] || '安排'}</span></div>
+                    ${it.type === 'SPOT' && it.duration != null ? `<span class="di-duration"><i class="fas fa-clock"></i> 停留 ${it.duration} 小时</span>` : ''}
+                </div>`).join('')
+                : '<div style="font-size:13px;color:#bbb;padding:6px 4px">这一天暂无安排</div>'}
+        </div>`;
+    }
+
+    document.getElementById('contentArea').innerHTML = `
+        <div class="share-wrap">
+            <div class="share-header-card">
+                <div class="meta">
+                    <span><i class="fas fa-calendar-day"></i> 共 ${r.days || 1} 天</span>
+                    <span><i class="fas fa-list-ol"></i> ${items.length} 项安排</span>
+                    ${r.status && r.status !== 'DRAFT' ? `<span>${STATUS_LABEL[r.status] || ''}</span>` : ''}
+                </div>
+                <h1>${escHtml(r.name)}</h1>
+                <span class="read-only-badge"><i class="fas fa-lock"></i> 只读分享 · 你只能查看，不能修改</span>
+                ${r.description ? `<div class="share-desc">${escHtml(r.description)}</div>` : ''}
+            </div>
+            <div class="share-card">
+                <h3><i class="fas fa-map-signs" style="color:#c41a1a"></i> 行程安排</h3>
+                ${bodyHtml || '<div style="text-align:center;color:#bbb;padding:30px;font-size:13px">暂无行程条目</div>'}
+            </div>
+            <div class="owner-foot">
+                <i class="fas fa-user-shield"></i> 本行程由「${escHtml(r.ownerName || '行程创建者')}」创建并分享，编辑权限仅属于创建者 ·
+                链接有效期至 ${fmtDate(r.expireTime)}
+            </div>
+        </div>`;
+}
+
+function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function fmtDate(d) { if (!d) return '--'; return new Date(d).toLocaleDateString('zh-CN'); }
+
+load();
+</script>
+</body>
+</html>

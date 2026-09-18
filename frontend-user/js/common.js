@@ -35,6 +35,40 @@ async function apiRaw(path) {
     return await res.json();
 }
 
+/** POST JSON 请求（行程条目较长时使用，避免 GET URL 长度限制） */
+async function apiPost(path, body) {
+    const res = await fetch(API + path, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
+    });
+    const data = await res.json();
+    if (data.code === 401) { showToast(data.msg || '请先登录', 'error'); return null; }
+    if (data.code !== 200) { showToast(data.msg || '请求失败', 'error'); return null; }
+    return (data.data !== null && data.data !== undefined) ? data.data : true;
+}
+
+/** 返回完整响应体（需要根据 code/msg 自行处理的场景，如只读分享失效提示） */
+async function apiPostRaw(path, body) {
+    const res = await fetch(API + path, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
+    });
+    return await res.json();
+}
+
+/* ========== 游客本机行程草稿（localStorage） ========== */
+const LOCAL_ROUTES_KEY = 'guestCustomRoutes';
+
+function loadLocalRoutes() {
+    try { const v = JSON.parse(localStorage.getItem(LOCAL_ROUTES_KEY)); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+}
+function saveLocalRoutes(list) { localStorage.setItem(LOCAL_ROUTES_KEY, JSON.stringify(list || [])); }
+
 function getParam(k) { return new URLSearchParams(location.search).get(k); }
 
 /* ========== Session ========== */

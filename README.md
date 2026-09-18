@@ -35,7 +35,7 @@ docker compose up --build -d
 
 ## 3. 功能模块
 
-### 游客端（http://localhost:8083）— 21 个页面
+### 游客端（http://localhost:8083）— 22 个页面
 
 | 页面 | 核心功能 |
 |------|---------|
@@ -53,7 +53,8 @@ docker compose up --build -d
 | 我的订单 `orders.html` | 订单列表（按状态筛选）、立即支付、取消、申请退款 |
 | 我的收藏 `favorites.html` | 景点/线路/文化/酒店收藏管理 |
 | 消息通知 `messages.html` | 系统消息列表（审核结果/评论回复/反馈回复自动推送） |
-| 我的线路 `my-routes.html` | 创建/编辑/删除自定义线路，拖拽添加景点，提交申请官方推荐，查看审核状态与驳回原因 |
+| 我的线路 `my-routes.html` | 创建/编辑/删除自定义行程，**游客未登录行程保存在本机（localStorage），登录后自动合并到账号**；景点/酒店/美食安排到指定天数、按天分组、调整同天顺序与景点停留时长；状态页签（草稿/待审核/已推荐/已驳回）；提交申请官方推荐、查看审核状态与驳回原因；**生成只读分享链接** |
+| 只读分享页 `shared-route.html` | 同伴凭令牌查看行程（无需登录），仅可查看不可改动；链接无效/已失效提示向创建者重新获取；创建者删除行程后注明“已被创建者删除” |
 | 问题反馈 `feedback.html` | 提交 Bug/建议/投诉（支持从景点详情预填信息），查看历史反馈及管理员回复 |
 | 客服中心 `faq.html` | 智能客服（FAQ关键词匹配自动回复）+ **人工客服**（一键切换，5秒轮询实时显示管理员回复） |
 | 多语言 | 中/英/日三语切换（导航栏 select，后端 API 支持 `lang=zh/en/ja` 参数） |
@@ -138,13 +139,20 @@ docker compose up --build -d
 | `GET /api/message/list?page=&size=` | 消息通知列表 |
 | `GET /api/message/unreadCount` | 未读消息数 |
 
-### 自定义线路
+### 自定义线路（行程单）
 | 端点 | 说明 |
 |------|------|
-| `GET /api/customRoute/list` | 我的自定义线路列表 |
-| `GET /api/customRoute/save?name=&description=&days=&spotData=` | 保存线路 |
-| `GET /api/customRoute/delete?id=` | 删除线路 |
+| `GET /api/customRoute/list` | 我的行程列表（草稿/待审核/已推荐/已驳回全部返回） |
+| `GET /api/customRoute/detail?id=` | 行程详情（仅创建者） |
+| `POST /api/customRoute/save` | 保存行程（JSON：id/name/description/days/spotData；spotData 支持景点 SPOT、酒店 HOTEL、美食 FOOD 条目，含 day/order/duration） |
+| `GET /api/customRoute/save?name=&days=&spotData=` | 保存行程（GET 兼容旧调用） |
+| `POST /api/customRoute/merge` | 登录后把游客本机草稿合并到账号（按 名称+内容 去重） |
+| `GET /api/customRoute/delete?id=` | 创建者删除行程（软删除，同伴分享页据此提示） |
 | `GET /api/customRoute/submitForReview?id=` | 申请官方推荐 |
+| `GET /api/customRoute/share/create?id=` | 生成/获取只读分享链接（幂等，有效期 30 天） |
+| `GET /api/customRoute/share/refresh?id=` | 重置分享链接（旧链接立即失效） |
+| `GET /api/customRoute/share/revoke?id=` | 关闭分享 |
+| `GET /api/customRoute/shared?token=` | 同伴只读查看（无需登录）：404 链接无效、403 已失效、410 创建者已删除 |
 
 ### 客服 & 反馈
 | 端点 | 说明 |

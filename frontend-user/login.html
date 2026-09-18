@@ -64,7 +64,20 @@ async function doLogin() {
     if (data) {
         saveUser(data);
         showToast('登录成功');
-        setTimeout(function() { location.href = 'index.html'; }, 500);
+        // 登录后把游客保存在本机的行程草稿合并到账号
+        try {
+            const local = loadLocalRoutes();
+            if (local.length) {
+                const res = await apiPostRaw('/api/customRoute/merge', { routes: local });
+                if (res && res.code === 200) {
+                    if (res.data && res.data.merged > 0) {
+                        showToast('已将本机 ' + res.data.merged + ' 条行程合并到账号', 'success');
+                    }
+                    saveLocalRoutes([]);
+                }
+            }
+        } catch (e) {}
+        setTimeout(function() { location.href = 'index.html'; }, 700);
     }
 }
 </script>

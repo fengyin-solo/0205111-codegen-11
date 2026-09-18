@@ -7,28 +7,53 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .route-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:16px}
+        .route-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin-top:16px}
         .route-card{background:#fff;border-radius:12px;border:1px solid #e8e8e8;overflow:hidden;transition:box-shadow .2s}
         .route-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.1)}
         .route-card-body{padding:18px}
         .route-card-title{font-weight:700;font-size:16px;margin-bottom:6px;color:#222}
-        .route-card-meta{font-size:12px;color:#888;margin-bottom:10px;display:flex;gap:12px}
+        .route-card-meta{font-size:12px;color:#888;margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap}
         .route-card-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:12px;max-height:48px;overflow:hidden}
-        .route-card-actions{display:flex;gap:8px}
+        .route-card-actions{display:flex;gap:8px;flex-wrap:wrap}
         .spot-tag{display:inline-block;background:#fff0f0;color:#c41a1a;padding:3px 8px;border-radius:6px;font-size:12px;margin:2px}
-        .new-card{border:2px dashed #e0e0e0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:160px;border-radius:12px;transition:all .2s;background:#fafafa}
+        .new-card{border:2px dashed #e0e0e0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:180px;border-radius:12px;transition:all .2s;background:#fafafa}
         .new-card:hover{border-color:#c41a1a;background:#fff0f0}
         .new-card i{font-size:28px;color:#ddd;margin-bottom:10px}
         .new-card:hover i{color:#c41a1a}
         .new-card span{font-size:13px;color:#aaa}
         .new-card:hover span{color:#c41a1a}
-        .modal-wide{max-width:640px;width:90vw;max-height:90vh;overflow-y:auto}
-        .spot-picker{max-height:260px;overflow-y:auto;border:1px solid #e8e8e8;border-radius:8px}
-        .sp-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f5f5f5;font-size:13px;cursor:pointer;transition:background .1s}
-        .sp-row:last-child{border-bottom:none}
-        .sp-row:hover{background:#fff0f0}
-        .sp-row.selected{background:#fff0f0}
-        .selected-spots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:32px;padding:6px 10px;border:1px solid #f0f0f0;border-radius:8px;background:#fafafa}
+        .modal-wide{max-width:760px;width:92vw;max-height:90vh;overflow-y:auto}
+        .guest-tip{background:linear-gradient(90deg,#fff7e6,#fff1f0);border:1px solid #ffd591;border-radius:10px;padding:12px 16px;font-size:13px;color:#ad6800;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+        .guest-tip a{color:#c41a1a;font-weight:600}
+        body.guest-mode .profile-sidebar{display:none}
+        body.guest-mode .profile-layout{grid-template-columns:1fr}
+        .status-tabs{display:flex;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+        .status-tab{padding:6px 16px;border-radius:16px;border:1px solid #e8e8e8;background:#fff;font-size:13px;cursor:pointer;color:#666}
+        .status-tab.active{background:#c41a1a;color:#fff;border-color:#c41a1a}
+        .type-badge{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;font-size:10px;color:#fff;margin-right:4px;vertical-align:middle}
+        .type-SPOT{background:#c41a1a}.type-HOTEL{background:#1677ff}.type-FOOD{background:#fa8c16}
+        .picker-tabs{display:flex;gap:6px;margin-bottom:10px}
+        .picker-tab{padding:6px 14px;border-radius:8px;border:1px solid #e8e8e8;background:#fafafa;font-size:13px;cursor:pointer}
+        .picker-tab.active{background:#fff0f0;border-color:#c41a1a;color:#c41a1a;font-weight:600}
+        .item-picker{max-height:240px;overflow-y:auto;border:1px solid #e8e8e8;border-radius:8px}
+        .ip-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #f5f5f5;font-size:13px;cursor:pointer}
+        .ip-row:last-child{border-bottom:none}
+        .ip-row:hover{background:#fff0f0}
+        .ip-row.selected{background:#fff0f0}
+        .day-group{border:1px solid #f0d5d5;border-radius:10px;margin-bottom:12px;overflow:hidden}
+        .day-group-head{background:#fff0f0;color:#c41a1a;font-weight:700;font-size:13px;padding:8px 14px;display:flex;justify-content:space-between;align-items:center}
+        .day-group-head select{font-weight:400;font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid #e8b5b5;color:#666}
+        .it-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid #fbeaea;font-size:13px;flex-wrap:wrap}
+        .it-name{flex:1;min-width:140px;font-weight:600}
+        .it-sub{font-size:11px;color:#999;font-weight:400;margin-left:4px}
+        .it-ctrl{display:flex;align-items:center;gap:4px;font-size:12px;color:#777}
+        .it-ctrl input[type=number]{width:64px;padding:3px 6px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px}
+        .it-btn{width:26px;height:26px;border:1px solid #e8e8e8;background:#fff;border-radius:6px;cursor:pointer;color:#666}
+        .it-btn:hover{border-color:#c41a1a;color:#c41a1a}
+        .it-del{width:26px;height:26px;border:none;background:none;cursor:pointer;color:#ff4d4f}
+        .copy-box{display:flex;gap:8px;margin:14px 0}
+        .copy-box input{flex:1;padding:9px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px;background:#fafafa}
+        .share-meta{font-size:12px;color:#888;margin-top:8px}
     </style>
 </head>
 <body>
@@ -70,11 +95,21 @@
         </div>
         <div class="profile-content">
             <div class="profile-section-header">
-                <span class="profile-section-header-title"><i class="fas fa-route"></i> 我的自定义线路</span>
+                <span class="profile-section-header-title"><i class="fas fa-route"></i> 我的线路</span>
                 <button class="btn btn-primary profile-header-action" onclick="openEditor(null)">
-                    <i class="fas fa-plus"></i> 新建线路
+                    <i class="fas fa-plus"></i> 新建行程
                 </button>
             </div>
+
+            <div class="guest-tip" id="guestTip" style="display:none">
+                <i class="fas fa-info-circle" style="font-size:16px"></i>
+                <span id="guestTipText">您还未登录，行程草稿保存在本机浏览器中。</span>
+                <a href="login.html">去登录</a> / <a href="register.html">注册</a>
+                <span style="color:#888">登录后自动合并到账号</span>
+            </div>
+
+            <div class="status-tabs" id="statusTabs"></div>
+
             <div id="routeWrap">
                 <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
             </div>
@@ -86,178 +121,503 @@
 <div class="modal-overlay" id="editorModal">
     <div class="modal modal-wide">
         <span class="modal-close" onclick="closeEditor()">&times;</span>
-        <h3 id="editorTitle" style="margin-bottom:16px">新建自定义线路</h3>
+        <h3 id="editorTitle" style="margin-bottom:16px">新建行程</h3>
         <input type="hidden" id="editorId">
         <div class="form-group" style="margin-bottom:14px">
             <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">线路名称 <span style="color:#ff4d4f">*</span></label>
             <input type="text" id="eName" class="form-control" placeholder="如：遵义红色两日游">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:14px">
             <div class="form-group">
-                <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">游览天数</label>
-                <input type="number" id="eDays" class="form-control" value="1" min="1" max="30">
+                <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">总天数</label>
+                <input type="number" id="eDays" class="form-control" value="1" min="1" max="30" onchange="renderSelected()">
             </div>
             <div class="form-group">
                 <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">简介</label>
                 <input type="text" id="eDesc" class="form-control" placeholder="可选">
             </div>
         </div>
+
         <div class="form-group" style="margin-bottom:14px">
-            <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">选择景点</label>
-            <input type="text" id="spotKw" placeholder="搜索景点…" class="form-control" style="margin-bottom:8px" oninput="filterSpots()">
-            <div class="spot-picker" id="spotPicker"></div>
+            <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">添加景点 / 酒店 / 美食</label>
+            <div class="picker-tabs">
+                <div class="picker-tab active" data-ptab="SPOT" onclick="switchPicker('SPOT')"><i class="fas fa-map-marker-alt"></i> 景点</div>
+                <div class="picker-tab" data-ptab="HOTEL" onclick="switchPicker('HOTEL')"><i class="fas fa-hotel"></i> 酒店</div>
+                <div class="picker-tab" data-ptab="FOOD" onclick="switchPicker('FOOD')"><i class="fas fa-utensils"></i> 美食</div>
+            </div>
+            <input type="text" id="itemKw" placeholder="搜索…" class="form-control" style="margin-bottom:8px" oninput="renderPicker()">
+            <div class="item-picker" id="itemPicker"></div>
         </div>
+
         <div class="form-group" style="margin-bottom:18px">
-            <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">已选景点</label>
-            <div class="selected-spots" id="selectedSpotsBox"></div>
+            <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">行程安排（按天分组，可调整顺序与停留时长）</label>
+            <div id="selectedBox"></div>
         </div>
+
         <div style="display:flex;gap:10px;justify-content:flex-end">
             <button class="btn-default" style="padding:8px 18px;border-radius:8px;border:1px solid #e0e0e0;cursor:pointer;font-size:13px" onclick="closeEditor()">取消</button>
-            <button class="btn-primary" style="padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px" onclick="saveRoute()"><i class="fas fa-save"></i> 保存</button>
+            <button class="btn-primary" style="padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px" onclick="saveRoute()"><i class="fas fa-save"></i> 保存草稿</button>
+        </div>
+    </div>
+</div>
+
+<!-- 分享弹窗 -->
+<div class="modal-overlay" id="shareModal">
+    <div class="modal" style="max-width:480px">
+        <span class="modal-close" onclick="document.getElementById('shareModal').classList.remove('show')">&times;</span>
+        <h3 style="margin-bottom:6px"><i class="fas fa-share-alt" style="color:#c41a1a"></i> 只读分享</h3>
+        <p style="font-size:13px;color:#888;margin-bottom:6px">同伴通过此链接只能查看行程，不能做任何修改；编辑权限仅属于你。</p>
+        <div class="copy-box">
+            <input type="text" id="shareUrl" readonly>
+            <button class="btn btn-primary" onclick="copyShareUrl()"><i class="fas fa-copy"></i> 复制</button>
+        </div>
+        <div class="share-meta" id="shareMeta"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+            <button class="btn-default" style="flex:1;min-width:140px;padding:8px;border-radius:8px;border:1px solid #e0e0e0;cursor:pointer;font-size:13px" onclick="refreshShare()"><i class="fas fa-sync-alt"></i> 重置链接（旧链接失效）</button>
+            <button class="btn-default" style="flex:1;min-width:140px;padding:8px;border-radius:8px;border:1px solid #ffccc7;background:#fff0f0;color:#ff4d4f;cursor:pointer;font-size:13px" onclick="revokeShare()"><i class="fas fa-ban"></i> 关闭分享</button>
         </div>
     </div>
 </div>
 
 <script src="js/common.js"></script>
 <script>
-requireLogin();
 renderHeader();
 loadSidebar();
 
-let allSpots = [], selectedSpots = [];
+let currentUser = getUser();
+if (!currentUser) document.body.classList.add('guest-mode');
+let serverRoutes = [], localRoutes = [], statusFilter = 'ALL';
+let allItems = { SPOT: [], HOTEL: [], FOOD: [] };
+let pickerType = 'SPOT';
+let selectedItems = [];
+let editingLocalId = null;
+
+const TYPE_LABEL = { SPOT: '景点', HOTEL: '酒店', FOOD: '美食' };
+const STATUS_LABEL = { DRAFT: '草稿', SUBMITTED: '待审核', APPROVED: '已推荐', REJECTED: '已驳回' };
 
 async function loadRoutes() {
-    const data = await api('/api/customRoute/list');
+    localRoutes = loadLocalRoutes();
+    serverRoutes = [];
+    if (currentUser) {
+        // 已登录：顺手把残留的本机草稿合并进账号
+        try {
+            if (localRoutes.length) {
+                const mergeRes = await apiPostRaw('/api/customRoute/merge', { routes: localRoutes });
+                if (mergeRes && mergeRes.code === 200) {
+                    if (mergeRes.data && mergeRes.data.merged > 0) {
+                        showToast('已将本机 ' + mergeRes.data.merged + ' 条行程合并到账号', 'success');
+                    }
+                    saveLocalRoutes([]);
+                    localRoutes = [];
+                }
+            }
+            const data = await api('/api/customRoute/list');
+            serverRoutes = data || [];
+        } catch (e) {}
+    }
+    renderGuestTip();
+    renderTabs();
+    renderList();
+}
+
+function renderGuestTip() {
+    const tip = document.getElementById('guestTip');
+    if (!currentUser) {
+        tip.style.display = 'flex';
+        document.getElementById('guestTipText').textContent =
+            '您还未登录，' + (localRoutes.length ? '已有 ' + localRoutes.length + ' 条行程草稿保存在本机。' : '新建行程将保存在本机浏览器中。');
+    } else {
+        tip.style.display = 'none';
+    }
+}
+
+function allRoutes() {
+    // 游客：仅本机；登录：仅服务端（本机草稿合并后即清空）
+    return currentUser
+        ? serverRoutes.map(r => ({ ...r, _source: 'server', items: parseItems(r.spotData) }))
+        : localRoutes.map(r => ({ ...r, _source: 'local', items: parseItems(r.spotData) }));
+}
+
+function renderTabs() {
+    const counts = { ALL: allRoutes().length, DRAFT: 0, SUBMITTED: 0, APPROVED: 0, REJECTED: 0 };
+    allRoutes().forEach(r => { const s = r.status || 'DRAFT'; if (counts[s] !== undefined) counts[s]++; });
+    const tabs = [
+        ['ALL', '全部'], ['DRAFT', '草稿'], ['SUBMITTED', '待审核'],
+        ['APPROVED', '已推荐'], ['REJECTED', '已驳回']
+    ];
+    document.getElementById('statusTabs').innerHTML = tabs.map(([k, label]) =>
+        `<div class="status-tab${statusFilter === k ? ' active' : ''}" onclick="setStatus('${k}')">${label}${k === 'ALL' || counts[k] ? ' (' + counts[k] + ')' : ''}</div>`
+    ).join('');
+}
+function setStatus(k) { statusFilter = k; renderTabs(); renderList(); }
+
+function renderList() {
     const wrap = document.getElementById('routeWrap');
-    if (!data || !data.length) {
+    let list = allRoutes();
+    if (statusFilter !== 'ALL') list = list.filter(r => (r.status || 'DRAFT') === statusFilter);
+
+    if (!list.length) {
         wrap.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#aaa">
             <i class="fas fa-route" style="font-size:36px;display:block;margin-bottom:12px;color:#e0e0e0"></i>
-            还没有自定义线路，快来创建第一条专属旅程吧！
-        </div>`; return;
-    }
-    wrap.innerHTML = `<div class="route-cards">${data.map(r => {
-        const spots = safeJson(r.spotData, []);
-        return `<div class="route-card">
-            <div style="background:linear-gradient(135deg,#c41a1a,#8b0000);height:5px"></div>
-            <div class="route-card-body">
-                <div class="route-card-title">${r.name}</div>
-                <div class="route-card-meta">
-                    <span><i class="fas fa-calendar-day"></i> ${r.days}天</span>
-                    <span><i class="fas fa-map-marker-alt"></i> ${spots.length}个景点</span>
-                    <span><i class="fas fa-clock"></i> ${fmtDate(r.createTime)}</span>
-                </div>
-                ${r.description ? `<div class="route-card-desc">${r.description}</div>` : ''}
-                <div style="margin-bottom:12px">${spots.slice(0,5).map(s=>`<span class="spot-tag">${s.spotName||s.name||'景点'}</span>`).join('')}
-                ${spots.length>5?`<span class="spot-tag" style="background:#f5f5f5;color:#aaa">+${spots.length-5}</span>`:''}</div>
-                ${r.status && r.status !== 'DRAFT' ? `<div style="margin-bottom:8px;font-size:12px"><span style="padding:2px 10px;border-radius:10px;font-weight:600;${r.status==='SUBMITTED'?'background:#fff7e6;color:#d48806':r.status==='APPROVED'?'background:#f6ffed;color:#52c41a':'background:#fff1f0;color:#ff4d4f'}">${{SUBMITTED:'待审核',APPROVED:'已推荐',REJECTED:'已驳回',DRAFT:'草稿'}[r.status]||r.status}</span>${r.rejectReason?` <span style="color:#ff4d4f;font-size:11px">原因：${r.rejectReason}</span>`:''}</div>` : ''}
-                <div class="route-card-actions">
-                    <button class="btn-primary" style="flex:1;padding:7px;border-radius:7px;border:none;cursor:pointer;font-size:13px" onclick="openEditor(${r.id})">
-                        <i class="fas fa-edit"></i> 编辑
-                    </button>
-                    ${!r.status || r.status === 'DRAFT' || r.status === 'REJECTED' ? `<button style="flex:1;padding:7px;border-radius:7px;border:1px solid #c41a1a;background:#fff;color:#c41a1a;cursor:pointer;font-size:13px" onclick="submitForReview(${r.id})"><i class="fas fa-paper-plane"></i> 申请推荐</button>` : ''}
-                    <button style="padding:7px 14px;border-radius:7px;border:1px solid #ffccc7;background:#fff0f0;color:#ff4d4f;cursor:pointer;font-size:13px" onclick="delRoute(${r.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
+            ${statusFilter === 'ALL' ? '还没有行程，快来安排第一条专属旅程吧！' : '该状态下暂无行程'}
         </div>`;
-    }).join('')}</div>`;
+        return;
+    }
+    wrap.innerHTML = `<div class="route-cards">
+        <div class="new-card" onclick="openEditor(null)">
+            <i class="fas fa-plus"></i><span>新建行程</span>
+        </div>
+        ${list.map(r => renderCard(r)).join('')}
+    </div>`;
 }
 
-async function fetchSpots() {
-    if (allSpots.length) return;
-    const d = await api('/api/spot/list?page=1&size=200');
-    allSpots = d && d.records ? d.records : [];
+function renderCard(r) {
+    const tags = r.items.slice(0, 5).map(it =>
+        `<span class="spot-tag"><i class="fas ${it.type === 'SPOT' ? 'fa-map-marker-alt' : it.type === 'HOTEL' ? 'fa-hotel' : 'fa-utensils'}"></i> ${escHtml(it.name)}</span>`
+    ).join('');
+    const status = r.status || 'DRAFT';
+    const statusStyle = status === 'SUBMITTED' ? 'background:#fff7e6;color:#d48806'
+        : status === 'APPROVED' ? 'background:#f6ffed;color:#52c41a'
+        : status === 'REJECTED' ? 'background:#fff1f0;color:#ff4d4f' : 'background:#f5f5f5;color:#888';
+    const canSubmit = status === 'DRAFT' || status === 'REJECTED';
+    return `<div class="route-card">
+        <div style="background:linear-gradient(135deg,#c41a1a,#8b0000);height:5px"></div>
+        <div class="route-card-body">
+            <div class="route-card-title">${escHtml(r.name)}</div>
+            <div class="route-card-meta">
+                <span><i class="fas fa-calendar-day"></i> ${r.days || 1}天</span>
+                <span><i class="fas fa-list-ol"></i> ${r.items.length}项安排</span>
+                <span><i class="fas fa-clock"></i> ${fmtDate(r.updateTime || r.createTime)}</span>
+                ${r._source === 'local' ? '<span style="color:#fa8c16"><i class="fas fa-laptop"></i> 本机</span>' : ''}
+            </div>
+            ${r.description ? `<div class="route-card-desc">${escHtml(r.description)}</div>` : ''}
+            <div style="margin-bottom:12px">${tags || '<span style="color:#ccc;font-size:12px">还没有安排条目</span>'}
+            ${r.items.length > 5 ? `<span class="spot-tag" style="background:#f5f5f5;color:#aaa">+${r.items.length - 5}</span>` : ''}</div>
+            <div style="margin-bottom:8px;font-size:12px">
+                <span style="padding:2px 10px;border-radius:10px;font-weight:600;${statusStyle}">${STATUS_LABEL[status] || status}</span>
+                ${status === 'REJECTED' && r.rejectReason ? `<span style="color:#ff4d4f;font-size:11px">原因：${escHtml(r.rejectReason)}</span>` : ''}
+            </div>
+            <div class="route-card-actions">
+                <button class="btn-primary" style="flex:1;padding:7px;border-radius:7px;border:none;cursor:pointer;font-size:13px" data-action="edit" data-source="${r._source}" data-id="${r._source === 'local' ? escHtml(r.localId) : r.id}">
+                    <i class="fas fa-edit"></i> 编辑
+                </button>
+                ${r._source === 'server' && canSubmit ? `<button style="flex:1;padding:7px;border-radius:7px;border:1px solid #c41a1a;background:#fff;color:#c41a1a;cursor:pointer;font-size:13px" data-action="submit" data-id="${r.id}"><i class="fas fa-paper-plane"></i> 申请推荐</button>` : ''}
+                ${r._source === 'server' ? `<button style="padding:7px 12px;border-radius:7px;border:1px solid #ffd591;background:#fff7e6;color:#d48806;cursor:pointer;font-size:13px" title="只读分享" data-action="share" data-id="${r.id}"><i class="fas fa-share-alt"></i></button>` : ''}
+                <button style="padding:7px 14px;border-radius:7px;border:1px solid #ffccc7;background:#fff0f0;color:#ff4d4f;cursor:pointer;font-size:13px" title="删除" data-action="del" data-source="${r._source}" data-id="${r._source === 'local' ? escHtml(r.localId) : r.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>`;
 }
 
-async function openEditor(id) {
-    await fetchSpots();
-    selectedSpots = [];
-    document.getElementById('editorId').value = id || '';
+/* ===================== 编辑器 ===================== */
+
+async function fetchItems(type) {
+    if (allItems[type].length) return;
+    const path = type === 'SPOT' ? '/api/spot/list?page=1&size=200'
+        : type === 'HOTEL' ? '/api/hotel/list?page=1&size=200'
+        : '/api/food/list?page=1&size=200';
+    const d = await apiRaw(path).then(j => j.data).catch(() => null);
+    allItems[type] = d && d.records ? d.records : [];
+}
+
+async function openEditor(source, id) {
+    selectedItems = [];
+    editingLocalId = null;
+    document.getElementById('editorId').value = '';
     document.getElementById('eName').value = '';
     document.getElementById('eDays').value = 1;
     document.getElementById('eDesc').value = '';
-    document.getElementById('spotKw').value = '';
-    document.getElementById('editorTitle').textContent = id ? '编辑自定义线路' : '新建自定义线路';
+    document.getElementById('itemKw').value = '';
+    document.getElementById('editorTitle').textContent = '新建行程';
+    switchPicker('SPOT');
 
-    if (id) {
-        const r = await api('/api/customRoute/detail?id=' + id);
-        if (r) {
-            document.getElementById('eName').value = r.name;
-            document.getElementById('eDays').value = r.days || 1;
-            document.getElementById('eDesc').value = r.description || '';
-            selectedSpots = safeJson(r.spotData, []);
+    if (source) {
+        document.getElementById('editorTitle').textContent = '编辑行程';
+        if (source === 'server') {
+            document.getElementById('editorId').value = id;
+            const r = await api('/api/customRoute/detail?id=' + id);
+            if (r) {
+                document.getElementById('eName').value = r.name;
+                document.getElementById('eDays').value = r.days || 1;
+                document.getElementById('eDesc').value = r.description || '';
+                selectedItems = parseItems(r.spotData);
+            }
+        } else {
+            editingLocalId = id;
+            const r = localRoutes.find(x => x.localId === id);
+            if (r) {
+                document.getElementById('eName').value = r.name;
+                document.getElementById('eDays').value = r.days || 1;
+                document.getElementById('eDesc').value = r.description || '';
+                selectedItems = parseItems(r.spotData);
+            }
         }
     }
-    filterSpots();
+    await fetchItems(pickerType);
+    renderPicker();
     renderSelected();
     document.getElementById('editorModal').classList.add('show');
 }
 function closeEditor() { document.getElementById('editorModal').classList.remove('show'); }
 
-function filterSpots() {
-    const kw = document.getElementById('spotKw').value.toLowerCase();
-    const filtered = allSpots.filter(s => (s.name || '').toLowerCase().includes(kw));
-    const selectedIds = new Set(selectedSpots.map(s => s.spotId));
-    document.getElementById('spotPicker').innerHTML = filtered.map(s =>
-        `<div class="sp-row${selectedIds.has(s.id)?' selected':''}" onclick="toggleSpot(${s.id},'${esc(s.name)}')">
-            <span>${s.name} <span style="font-size:11px;color:#aaa">${s.region||''}</span></span>
-            <span style="color:${selectedIds.has(s.id)?'#c41a1a':'#ccc'};font-size:18px">${selectedIds.has(s.id)?'✓':''}</span>
-        </div>`
-    ).join('') || '<div style="padding:16px;text-align:center;color:#ccc">无匹配结果</div>';
+function switchPicker(type) {
+    pickerType = type;
+    document.querySelectorAll('.picker-tab').forEach(el => el.classList.toggle('active', el.dataset.ptab === type));
+    fetchItems(type).then(renderPicker);
+    renderPicker();
 }
 
-function toggleSpot(id, name) {
-    const idx = selectedSpots.findIndex(s => s.spotId === id);
-    if (idx >= 0) selectedSpots.splice(idx, 1);
-    else selectedSpots.push({ spotId: id, spotName: name, day: 1, order: selectedSpots.length + 1 });
-    filterSpots();
+function renderPicker() {
+    const kw = (document.getElementById('itemKw').value || '').toLowerCase();
+    const list = allItems[pickerType].filter(it => (it.name || '').toLowerCase().includes(kw));
+    const existKeys = new Set(selectedItems.map(it => it.type + ':' + it.refId));
+    const icon = pickerType === 'SPOT' ? 'fa-map-marker-alt' : pickerType === 'HOTEL' ? 'fa-hotel' : 'fa-utensils';
+    document.getElementById('itemPicker').innerHTML = list.map(it => {
+        const key = pickerType + ':' + it.id;
+        const sub = pickerType === 'SPOT' ? (it.region || it.location || '')
+            : pickerType === 'HOTEL' ? (it.location || '') : (it.category || '');
+        return `<div class="ip-row${existKeys.has(key) ? ' selected' : ''}" data-action="add" data-type="${pickerType}" data-id="${it.id}" data-name="${escHtml(it.name)}">
+            <span><i class="fas ${icon}" style="color:#c41a1a;margin-right:6px"></i>${escHtml(it.name)} <span style="font-size:11px;color:#aaa">${escHtml(sub)}</span></span>
+            <span style="color:${existKeys.has(key) ? '#c41a1a' : '#ccc'};font-size:16px">${existKeys.has(key) ? '✓' : '+'}</span>
+        </div>`;
+    }).join('') || '<div style="padding:16px;text-align:center;color:#ccc;font-size:13px">无匹配结果</div>';
+}
+
+function addItem(type, refId, name) {
+    const key = type + ':' + refId;
+    if (selectedItems.some(it => it.type + ':' + it.refId === key)) { showToast('已在行程中', 'warning'); return; }
+    selectedItems.push({
+        type, refId, name,
+        day: 1,
+        order: selectedItems.filter(x => x.day === 1).length + 1,
+        duration: type === 'SPOT' ? 2 : null
+    });
+    renderPicker();
     renderSelected();
 }
 
+/* 卡片 / 选择器统一事件委托（避免名称里的引号拼接进 inline onclick） */
+document.getElementById('routeWrap').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    if (action === 'edit') openEditor(btn.dataset.source, btn.dataset.id);
+    if (action === 'submit') submitForReview(btn.dataset.id);
+    if (action === 'share') openShare(btn.dataset.id);
+    if (action === 'del') delRoute(btn.dataset.source, btn.dataset.id);
+});
+document.getElementById('itemPicker').addEventListener('click', e => {
+    const row = e.target.closest('[data-action="add"]');
+    if (!row) return;
+    addItem(row.dataset.type, parseInt(row.dataset.id), row.dataset.name);
+});
+
 function renderSelected() {
-    const box = document.getElementById('selectedSpotsBox');
-    if (!selectedSpots.length) { box.innerHTML = '<span style="color:#ccc;font-size:12px">尚未选择景点</span>'; return; }
-    box.innerHTML = selectedSpots.map((s, i) =>
-        `<span class="spot-tag" style="cursor:default">
-            ${s.spotName}
-            <span onclick="removeSpot(${i})" style="cursor:pointer;margin-left:4px;color:#888">×</span>
-        </span>`
-    ).join('');
+    const box = document.getElementById('selectedBox');
+    if (!selectedItems.length) {
+        box.innerHTML = '<div style="padding:18px;text-align:center;color:#ccc;font-size:13px;border:1px dashed #e8e8e8;border-radius:10px">尚未添加行程条目，从上方列表选择景点 / 酒店 / 美食</div>';
+        return;
+    }
+    let days = parseInt(document.getElementById('eDays').value) || 1;
+    if (days < 1) days = 1;
+    // 防止已有条目落在不存在的天数
+    selectedItems.forEach(it => { if (!it.day || it.day > days) it.day = days; });
+    const groups = groupByDay(selectedItems);
+    let html = '';
+    for (let d = 1; d <= days; d++) {
+        const items = groups[d] || [];
+        html += `<div class="day-group">
+            <div class="day-group-head">
+                <span><i class="fas fa-calendar-day"></i> 第 ${d} 天 · ${items.length} 项</span>
+                <span></span>
+            </div>`;
+        if (!items.length) {
+            html += `<div style="padding:12px;color:#ccc;font-size:12px">这一天还没有安排</div>`;
+        } else {
+            items.forEach((it) => {
+                const idx = selectedItems.indexOf(it);
+                const up = it.order > 1;
+                const down = it.order < items.length;
+                html += `<div class="it-row">
+                    <span class="type-badge type-${it.type}">${TYPE_LABEL[it.type].charAt(0)}</span>
+                    <span class="it-name">${escHtml(it.name)}<span class="it-sub">${TYPE_LABEL[it.type]}</span></span>
+                    <div class="it-ctrl">
+                        安排到
+                        <select onchange="moveDay(${idx},this.value)">
+                            ${Array.from({length: days}, (_, i) => i + 1).map(dd =>
+                                `<option value="${dd}" ${dd === it.day ? 'selected' : ''}>第${dd}天</option>`).join('')}
+                        </select>
+                    </div>
+                    ${it.type === 'SPOT' ? `<div class="it-ctrl">停留
+                        <input type="number" min="0.5" step="0.5" value="${it.duration != null ? it.duration : ''}" onchange="setDuration(${idx},this.value)" title="停留时长（小时）"> 小时</div>` : ''}
+                    <button class="it-btn" ${up ? '' : 'disabled style="opacity:.3"'} onclick="moveItem(${idx},-1)" title="上移"><i class="fas fa-arrow-up"></i></button>
+                    <button class="it-btn" ${down ? '' : 'disabled style="opacity:.3"'} onclick="moveItem(${idx},1)" title="下移"><i class="fas fa-arrow-down"></i></button>
+                    <button class="it-del" onclick="removeItem(${idx})" title="移除"><i class="fas fa-times"></i></button>
+                </div>`;
+            });
+        }
+        html += `</div>`;
+    }
+    box.innerHTML = html;
 }
-function removeSpot(i) { selectedSpots.splice(i, 1); filterSpots(); renderSelected(); }
+
+function moveDay(idx, day) {
+    selectedItems[idx].day = parseInt(day);
+    reindex();
+    renderSelected();
+}
+function moveItem(idx, dir) {
+    const it = selectedItems[idx];
+    const sameDay = selectedItems.filter(x => x.day === it.day).sort((a, b) => a.order - b.order);
+    const pos = sameDay.findIndex(x => x === it);
+    const swap = sameDay[pos + dir];
+    if (!swap) return;
+    const tmp = it.order; it.order = swap.order; swap.order = tmp;
+    renderSelected();
+}
+function setDuration(idx, v) {
+    selectedItems[idx].duration = v === '' ? null : parseFloat(v);
+}
+function removeItem(idx) {
+    selectedItems.splice(idx, 1);
+    reindex();
+    renderPicker();
+    renderSelected();
+}
+function reindex() {
+    const days = parseInt(document.getElementById('eDays').value) || 1;
+    for (let d = 1; d <= days; d++) {
+        selectedItems.filter(x => x.day === d).sort((a, b) => a.order - b.order)
+            .forEach((x, i) => x.order = i + 1);
+    }
+}
 
 async function saveRoute() {
     const name = document.getElementById('eName').value.trim();
     if (!name) { showToast('请输入线路名称', 'warning'); return; }
-    const id = document.getElementById('editorId').value;
-    const params = new URLSearchParams({
-        name, days: document.getElementById('eDays').value,
+    reindex();
+    const payload = {
+        name,
+        days: parseInt(document.getElementById('eDays').value) || 1,
         description: document.getElementById('eDesc').value.trim(),
-        spotData: JSON.stringify(selectedSpots)
-    });
-    if (id) params.set('id', id);
-    const res = await api('/api/customRoute/save?' + params.toString());
-    if (res) { closeEditor(); showToast('保存成功'); loadRoutes(); }
+        spotData: JSON.stringify(selectedItems)
+    };
+    const id = document.getElementById('editorId').value;
+
+    if (currentUser) {
+        if (id) payload.id = id;
+        const res = await apiPost('/api/customRoute/save', payload);
+        if (res) { closeEditor(); showToast('保存成功'); loadRoutes(); }
+    } else {
+        if (editingLocalId) {
+            const i = localRoutes.findIndex(r => r.localId === editingLocalId);
+            if (i >= 0) localRoutes[i] = { ...localRoutes[i], ...payload, status: 'DRAFT', updateTime: new Date().toISOString() };
+        } else {
+            localRoutes.push({
+                localId: 'L' + Date.now(),
+                ...payload,
+                status: 'DRAFT',
+                createTime: new Date().toISOString(),
+                updateTime: new Date().toISOString()
+            });
+        }
+        saveLocalRoutes(localRoutes);
+        closeEditor();
+        showToast('已保存到本机，登录后可合并到账号');
+        loadRoutes();
+    }
 }
 
-async function delRoute(id) {
-    showConfirm('确定删除该线路？', async () => {
-        const res = await api('/api/customRoute/delete?id=' + id);
-        if (res) { showToast('已删除'); loadRoutes(); }
+async function delRoute(source, id) {
+    showConfirm('确定删除该行程？删除后同伴的分享详情页将无法再查看。', async () => {
+        if (source === 'server') {
+            const res = await api('/api/customRoute/delete?id=' + id);
+            if (res) { showToast('已删除'); loadRoutes(); }
+        } else {
+            localRoutes = localRoutes.filter(r => r.localId !== id);
+            saveLocalRoutes(localRoutes);
+            showToast('已删除');
+            loadRoutes();
+        }
     });
 }
 
 async function submitForReview(id) {
-    showConfirm('确定将此线路提交审核？通过后将被纳入官方推荐线路。', async () => {
+    showConfirm('确定将此行程提交审核？通过后将被纳入官方推荐线路。', async () => {
         const res = await api('/api/customRoute/submitForReview?id=' + id);
         if (res) { showToast('已提交审核，请等待管理员处理'); loadRoutes(); }
     });
 }
 
-function safeJson(s, def) { try { return JSON.parse(s || '[]'); } catch(e) { return def; } }
+/* ===================== 只读分享 ===================== */
+
+let shareRouteId = null;
+async function openShare(id) {
+    shareRouteId = id;
+    const res = await apiRaw('/api/customRoute/share/create?id=' + id);
+    if (!res || res.code !== 200) { showToast((res && res.msg) || '生成分享链接失败', 'error'); return; }
+    fillShareModal(res.data);
+    document.getElementById('shareModal').classList.add('show');
+}
+function fillShareModal(info) {
+    const url = location.origin + location.pathname.replace(/my-routes\.html.*$/, '') + info.url;
+    document.getElementById('shareUrl').value = url;
+    document.getElementById('shareMeta').innerHTML =
+        '<i class="fas fa-clock"></i> 有效期至 ' + fmtDate(info.expireTime) + '（30天），同伴仅可查看，不能编辑';
+}
+function copyShareUrl() {
+    const input = document.getElementById('shareUrl');
+    input.select();
+    const done = () => showToast('链接已复制');
+    if (navigator.clipboard) { navigator.clipboard.writeText(input.value).then(done).catch(() => { document.execCommand('copy'); done(); }); }
+    else { document.execCommand('copy'); done(); }
+}
+async function refreshShare() {
+    showConfirm('重置后旧链接立即失效，需要把新链接重新发给同伴，确定？', async () => {
+        const res = await apiRaw('/api/customRoute/share/refresh?id=' + shareRouteId);
+        if (res && res.code === 200) { fillShareModal(res.data); showToast('已生成新链接'); }
+    });
+}
+async function revokeShare() {
+    showConfirm('关闭分享后，已发出的链接将全部失效，确定？', async () => {
+        const res = await api('/api/customRoute/share/revoke?id=' + shareRouteId);
+        if (res) { document.getElementById('shareModal').classList.remove('show'); showToast('已关闭分享'); }
+    });
+}
+
+/* ===================== 工具 ===================== */
+
+/** 兼容旧格式：{spotId, spotName} → {type:'SPOT', refId, name} */
+function parseItems(s) {
+    let arr = [];
+    try { arr = JSON.parse(s || '[]'); } catch (e) { return []; }
+    if (!Array.isArray(arr)) return [];
+    return arr.map((x, i) => {
+        if (x.type) return {
+            type: x.type, refId: x.refId, name: x.name || x.spotName || '',
+            day: x.day || 1, order: x.order || (i + 1), duration: x.duration != null ? x.duration : (x.type === 'SPOT' ? 2 : null), note: x.note || ''
+        };
+        return {
+            type: 'SPOT', refId: x.spotId, name: x.spotName || x.name || '景点',
+            day: x.day || 1, order: x.order || (i + 1), duration: x.duration != null ? x.duration : 2, note: x.note || ''
+        };
+    });
+}
+function groupByDay(items) {
+    const g = {};
+    items.forEach(it => {
+        const d = it.day || 1;
+        (g[d] = g[d] || []).push(it);
+    });
+    Object.keys(g).forEach(d => g[d].sort((a, b) => (a.order || 1) - (b.order || 1)));
+    return g;
+}
 function fmtDate(d) { if (!d) return '--'; return new Date(d).toLocaleDateString('zh-CN'); }
-function esc(s) { return (s||'').replace(/'/g,"\\'"); }
+function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function escJs(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
 function loadSidebar() {
     const u = getUser();
     if (!u) return;
